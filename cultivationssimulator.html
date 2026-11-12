@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>诸天轮回:脑洞修仙模拟器(豪华完全体)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #171a23;
+    --bg3: #1f2330;
+    --gold: #d4af37;
+    --gold-light: #f5d87a;
+    --jade: #5fbf9f;
+    --purple: #a855f7;
+    --blood: #8b1a1a;
+    --ash: #4b4f58;
+    --text: #e8e2cf;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "STKaiti", "KaiTi", "Noto Serif SC", "Songti SC", serif;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(212,175,55,0.08), transparent 55%),
+      radial-gradient(ellipse at 90% 100%, rgba(95,191,159,0.07), transparent 55%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+
+  /* ===== 古风滚动条 ===== */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0b0d12; border-left: 1px solid #2a2418; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #7a6420, #d4af37, #7a6420);
+    border-radius: 6px; border: 2px solid #0b0d12;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #a8892c, #f5d87a, #a8892c); }
+
+  /* ===== 鎏金卡片 ===== */
+  .gold-card {
+    position: relative;
+    background: linear-gradient(145deg, rgba(31,35,48,0.95), rgba(19,22,30,0.97));
+    border: 1px solid rgba(212,175,55,0.45);
+    border-radius: 12px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.6) inset, 0 6px 24px rgba(0,0,0,0.55), 0 0 18px rgba(212,175,55,0.08);
+  }
+  .gold-card::before, .gold-card::after {
+    content: ""; position: absolute; width: 14px; height: 14px;
+    border: 2px solid var(--gold); pointer-events: none;
+  }
+  .gold-card::before { top: -1px; left: -1px; border-right: none; border-bottom: none; border-top-left-radius: 12px; }
+  .gold-card::after { bottom: -1px; right: -1px; border-left: none; border-top: none; border-bottom-right-radius: 12px; }
+
+  .jade-card {
+    background: linear-gradient(145deg, rgba(20,38,34,0.9), rgba(15,22,22,0.95));
+    border: 1px solid rgba(95,191,159,0.45);
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.5), 0 0 14px rgba(95,191,159,0.1);
+  }
+
+  .gold-title {
+    background: linear-gradient(90deg, #a8892c, #f5d87a, #d4af37, #f5d87a, #a8892c);
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: goldShift 5s linear infinite;
+    letter-spacing: 0.12em;
+  }
+  @keyframes goldShift { to { background-position: 200% center; } }
+
+  /* ===== 按钮 ===== */
+  .btn-gold {
+    background: linear-gradient(180deg, #3a2f12, #1c160a);
+    border: 1px solid var(--gold);
+    color: var(--gold-light);
+    padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    transition: all .2s ease; font-family: inherit; letter-spacing: 0.08em;
+    box-shadow: 0 0 8px rgba(212,175,55,0.15);
+  }
+  .btn-gold:hover:not(:disabled) {
+    background: linear-gradient(180deg, #5a4818, #2a200c);
+    box-shadow: 0 0 16px rgba(245,216,122,0.5); transform: translateY(-1px);
+  }
+  .btn-gold:active:not(:disabled) { transform: translateY(1px); }
+  .btn-gold:disabled { opacity: .4; cursor: not-allowed; filter: grayscale(.6); }
+  .btn-jade {
+    background: linear-gradient(180deg, #17352c, #0c1c17);
+    border: 1px solid var(--jade); color: #b8f0dc;
+    padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    transition: all .2s ease; font-family: inherit; letter-spacing: 0.08em;
+  }
+  .btn-jade:hover:not(:disabled) { box-shadow: 0 0 14px rgba(95,191,159,0.55); transform: translateY(-1px); }
+  .btn-jade:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-blood {
+    background: linear-gradient(180deg, #3a1212, #1a0707);
+    border: 1px solid #b33; color: #ffb4b4;
+    padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    transition: all .2s ease; font-family: inherit;
+  }
+  .btn-blood:hover:not(:disabled) { box-shadow: 0 0 14px rgba(200,50,50,0.55); }
+
+  /* ===== 天赋稀有度 ===== */
+  /* 彩:天道级 彩色渐变流光边框 */
+  .grade-rainbow {
+    position: relative; border-radius: 12px; padding: 2px; z-index: 0;
+    background: linear-gradient(90deg, #ff0080, #ff8c00, #ffe600, #00ff9d, #00cfff, #7a5cff, #ff0080);
+    background-size: 400% 100%;
+    animation: rainbowFlow 3s linear infinite;
+    box-shadow: 0 0 22px rgba(255,0,128,0.35), 0 0 30px rgba(0,207,255,0.25);
+  }
+  .grade-rainbow > .inner { background: #12141c; border-radius: 10px; height: 100%; padding: 12px; }
+  .grade-rainbow .tname {
+    background: linear-gradient(90deg, #ff4d4d, #ffd24d, #4dff88, #4dd2ff, #b84dff, #ff4d4d);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: rainbowFlow 2.5s linear infinite; font-weight: 800;
+  }
+  @keyframes rainbowFlow { 0% { background-position: 0% 50%; } 100% { background-position: 400% 50%; } }
+  .rainbow-text {
+    background: linear-gradient(90deg, #ff4d4d, #ffd24d, #4dff88, #4dd2ff, #b84dff, #ff4d4d);
+    background-size: 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    animation: rainbowFlow 2.5s linear infinite; font-weight: 800;
+  }
+  .rainbow-border {
+    border: 2px solid transparent; border-radius: 10px;
+    background: linear-gradient(#12141c,#12141c) padding-box,
+      linear-gradient(90deg,#ff0080,#ff8c00,#ffe600,#00ff9d,#00cfff,#7a5cff,#ff0080) border-box;
+    background-size: 100% 100%, 400% 100%;
+    animation: rainbowFlow 3s linear infinite;
+  }
+
+  /* 金:仙品 */
+  .grade-gold {
+    border: 2px solid #f5c542; border-radius: 12px;
+    background: linear-gradient(145deg, rgba(60,46,8,0.85), rgba(22,18,8,0.95));
+    box-shadow: 0 0 16px rgba(245,197,66,0.5), inset 0 0 12px rgba(245,197,66,0.15);
+    animation: goldPulse 2.4s ease-in-out infinite;
+  }
+  .grade-gold .tname { color: #ffd84d; text-shadow: 0 0 8px rgba(255,216,77,0.8); font-weight: 800; }
+  @keyframes goldPulse {
+    0%,100% { box-shadow: 0 0 12px rgba(245,197,66,0.4), inset 0 0 10px rgba(245,197,66,0.12); }
+    50% { box-shadow: 0 0 26px rgba(255,220,100,0.75), inset 0 0 16px rgba(245,197,66,0.25); }
+  }
+  .text-gold-grade { color: #ffd84d; text-shadow: 0 0 6px rgba(255,216,77,0.7); font-weight: 700; }
+
+  /* 紫:奇葩/邪魔 */
+  .grade-purple {
+    border: 2px solid #a855f7; border-radius: 12px;
+    background: linear-gradient(145deg, rgba(44,16,70,0.85), rgba(16,8,26,0.95));
+    box-shadow: 0 0 16px rgba(168,85,247,0.5), inset 0 0 12px rgba(168,85,247,0.15);
+    animation: purpleWarp 3s ease-in-out infinite;
+  }
+  .grade-purple .tname { color: #d8a4ff; text-shadow: 0 0 8px rgba(168,85,247,0.9); font-weight: 800; }
+  @keyframes purpleWarp {
+    0%,100% { box-shadow: 0 0 12px rgba(168,85,247,0.4); filter: hue-rotate(0deg); }
+    50% { box-shadow: 0 0 26px rgba(200,100,255,0.75); filter: hue-rotate(-18deg); }
+  }
+  .text-purple-grade { color: #d8a4ff; text-shadow: 0 0 6px rgba(168,85,247,0.8); font-weight: 700; }
+
+  /* 黑:天谴/负面 */
+  .grade-black {
+    border: 2px solid #6b1a1a; border-radius: 12px;
+    background: linear-gradient(145deg, rgba(40,10,10,0.9), rgba(12,12,14,0.97));
+    box-shadow: 0 0 14px rgba(139,26,26,0.5), inset 0 0 14px rgba(0,0,0,0.8);
+    animation: curseFlicker 4s steps(1) infinite;
+  }
+  .grade-black .tname { color: #b05050; text-shadow: 0 0 6px rgba(139,26,26,0.9); font-weight: 800; }
+  @keyframes curseFlicker {
+    0%,92%,100% { opacity: 1; }
+    93% { opacity: .78; } 95% { opacity: 1; } 97% { opacity: .85; }
+  }
+  .text-black-grade { color: #b05050; font-weight: 700; }
+
+  /* 子嗣灵根/物品品阶辅助色 */
+  .tier-common { color: #b5b5b5; }
+  .tier-good { color: #7fd6a8; }
+  .tier-rare { color: #6fb7ff; }
+  .tier-epic { color: #d8a4ff; }
+  .tier-legend { color: #ffd84d; text-shadow: 0 0 6px rgba(255,216,77,0.6); }
+
+  /* ===== 进度条 ===== */
+  .bar-wrap { background: #0b0d12; border: 1px solid #3a3320; border-radius: 999px; height: 10px; overflow: hidden; }
+  .bar-exp { height: 100%; background: linear-gradient(90deg, #7a6420, #f5d87a); transition: width .4s; }
+  .bar-hp { height: 100%; background: linear-gradient(90deg, #7a1a1a, #ff5a5a); transition: width .4s; }
+  .bar-life { height: 100%; background: linear-gradient(90deg, #1f6b52, #7fffd0); transition: width .4s; }
+
+  /* ===== 日志与动画 ===== */
+  .log-line { animation: fadeUp .35s ease both; border-left: 2px solid rgba(212,175,55,0.35); padding-left: 8px; margin: 4px 0; }
+  .log-good { border-left-color: #5fbf9f; }
+  .log-bad { border-left-color: #b33; color: #e8b0b0; }
+  .log-rare { border-left-color: #f5d87a; color: #ffe9a0; }
+  .log-epic { border-left-color: #a855f7; color: #e2c4ff; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .pop-in { animation: popIn .35s cubic-bezier(.2,1.4,.4,1) both; }
+  @keyframes popIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+  .shake { animation: shake .4s; }
+  @keyframes shake { 0%,100% { transform: translateX(0);} 25% { transform: translateX(-6px);} 75% { transform: translateX(6px);} }
+  .float-glow { animation: floatGlow 4s ease-in-out infinite; }
+  @keyframes floatGlow { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+  .modal-mask { position: fixed; inset: 0; background: rgba(5,6,9,0.82); backdrop-filter: blur(3px); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .divider-gold { height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); border: 0; margin: 10px 0; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid rgba(212,175,55,0.5); color: var(--gold-light); margin: 2px 3px 2px 0; }
+  .tag-jade { border-color: rgba(95,191,159,0.6); color: #b8f0dc; }
+  .tag-red { border-color: rgba(200,60,60,0.6); color: #ffb4b4; }
+  .tag-purple { border-color: rgba(168,85,247,0.6); color: #e2c4ff; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ============================================================
+   数据约定(第二、三部分将按此约定读取):
+   四维属性 stats: body 体魄 / wit 悟性 / luck 气运 / charm 魅力
+   效果对象 fx 可用字段:
+     exp 修为(±)  stone 灵石(±)  life 寿元(±年)  hp 气血上限(±)
+     body/wit/luck/charm 四维(±)
+     favor 目标NPC好感(±)  item 获得物品id  items 获得多个物品id数组
+     enemy {name, power} 新增仇人   child true 触发生子判定
+     adopt true 触发认义父   die true 当场陨落   breakthrough true 免费冲关一次
+     power 战力永久(±%)   tag 文本标记
+   ============================================================ */
+
+/* ============================ 一、境界库 REALMS ============================
+   need:升至下一层所需修为   life:突破到该层获得的寿元加成(年)
+   mul:战力倍率   rate:突破基础成功率(0-1)   */
+const REALMS = [
+  { id: 0,  name: "炼气一层", tier: "炼气", need: 100,        life: 0,    mul: 1,      rate: 0.95, flavor: "引气入体,你终于不是凡人了。村口二狗子看你的眼神从嫌弃变成了羡慕。" },
+  { id: 1,  name: "炼气二层", tier: "炼气", need: 220,        life: 3,    mul: 1.4,    rate: 0.93, flavor: "丹田里多了一缕气,像刚煮开的泡面香气,隐隐约约。" },
+  { id: 2,  name: "炼气三层", tier: "炼气", need: 420,        life: 3,    mul: 1.9,    rate: 0.92, flavor: "你已能徒手劈开一块西瓜,这在凡人界已是武林宗师。" },
+  { id: 3,  name: "炼气四层", tier: "炼气", need: 700,        life: 4,    mul: 2.5,    rate: 0.90, flavor: "灵气入体如饮冰水,通透舒爽,只是肾有点虚。" },
+  { id: 4,  name: "炼气五层", tier: "炼气", need: 1100,       life: 4,    mul: 3.2,    rate: 0.88, flavor: "宗门执事开始记得你的名字了,虽然念错了一个字。" },
+  { id: 5,  name: "炼气六层", tier: "炼气", need: 1700,       life: 5,    mul: 4.1,    rate: 0.86, flavor: "你学会了御物术,第一件御起来的东西是一双臭袜子。" },
+  { id: 6,  name: "炼气七层", tier: "炼气", need: 2500,       life: 5,    mul: 5.2,    rate: 0.84, flavor: "同期弟子开始喊你师兄,你开始习惯了背手望天。" },
+  { id: 7,  name: "炼气八层", tier: "炼气", need: 3600,       life: 6,    mul: 6.6,    rate: 0.82, flavor: "气海翻涌,一口浊气吐出,三步外的蚊子当场驾鹤西去。" },
+  { id: 8,  name: "炼气九层", tier: "炼气", need: 5200,       life: 8,    mul: 8.5,    rate: 0.80, flavor: "炼气圆满!距离筑基只差一个机缘,和一个不会被雷劈的运气。" },
+  { id: 9,  name: "筑基期",   tier: "筑基", need: 12000,      life: 80,   mul: 20,     rate: 0.65, flavor: "筑基成功,脱胎换骨!寿元大增,从此可以名正言顺地自称“道友”,不再被叫“小友”。" },
+  { id: 10, name: "金丹期",   tier: "金丹", need: 60000,      life: 200,  mul: 70,     rate: 0.55, flavor: "丹田之中金丹旋转,九天雷劫都得夸你一句“丹圆如月”。你在宗门有了自己的洞府,和一条看门灵犬。" },
+  { id: 11, name: "元婴期",   tier: "元婴", need: 300000,     life: 500,  mul: 280,    rate: 0.45, flavor: "元婴出窍,神游万里。你的小人儿会抱着你的大腿喊爹,这设定确实有点诡异。" },
+  { id: 12, name: "化神期",   tier: "化神", need: 1500000,    life: 1000, mul: 1200,   rate: 0.38, flavor: "化神!一念山河动,一语风云变。你随口一句“尔等蝼蚁”,三千里外的妖王吓得尿了裤子。" },
+  { id: 13, name: "炼虚期",   tier: "炼虚", need: 8000000,    life: 2000, mul: 6000,   rate: 0.30, flavor: "炼虚合道,虚空为室。你终于能在虚空里面开个小号了,顺便挖了个洞府。" },
+  { id: 14, name: "合体期",   tier: "合体", need: 40000000,   life: 4000, mul: 30000,  rate: 0.25, flavor: "元神与肉身合二为一,天地同频。你打了个喷嚏,隔壁大陆下了三天三夜的雨。" },
+  { id: 15, name: "大乘期",   tier: "大乘", need: 200000000,  life: 8000, mul: 150000, rate: 0.18, flavor: "大乘圆满,半步仙人。整个修仙界都在传颂你的名号,连青楼的小曲都给你编了十八段。" },
+  { id: 16, name: "渡劫飞升", tier: "飞升", need: 500000000,   life: 20000,mul: 1000000,rate: 0.10, flavor: "九九天劫,雷罚加身。熬过去,你便是真仙;熬不过,下辈子投个好胎。诸天万界,等你来战!" }
+];
+
+/* ============================ 二、天赋库 TALENTS ============================
+   grade: 彩(天道级) 金(仙品) 紫(奇葩/邪魔) 黑(天谴/负面)
+   effectType 约定(第二部分在对应处理函数中实现):
+     lickdog_return / multi_child / moon_buff / blood_cow / adopt_father / reject_stronger /
+     lone_star / ... 详见各条 desc 与 params */
+const TALENTS = [
+  /* ---------------- 彩:天道级 ---------------- */
+  { id: "T_LICKDOG", name: "舔狗万倍返还", grade: "彩", effectType: "lickdog_return",
+    desc: "你给异性NPC赠礼时,100%触发“舔到最后一无所有,却能得到一切”的万倍暴击返还:百倍至万倍的高阶仙丹、海量灵石或神级功法残卷从天而降。女神说你是好人,系统说你是爹。",
+    params: { minMul: 100, maxMul: 10000, chance: 1.0 } },
+  { id: "T_MULTICHILD", name: "多子多福", grade: "彩", effectType: "multi_child",
+    desc: "每次与道侣生子成功,天道降下功德金光:无视瓶颈直接暴涨修为,全属性按百分比永久提升,寿元再+50年。真正的修仙界劳模,生育即修炼,造人即造化!",
+    params: { expPct: 0.25, statPct: 0.05, life: 50 } },
+  { id: "T_MOONGOD", name: "月抛型概念神", grade: "彩", effectType: "moon_buff",
+    desc: "每过1年(或每3次行动),自动随机切换一个超模BUFF:攻击×999、突破率100%、必捡仙器、灵石翻倍、百毒不侵……你就像月抛隐形眼镜,每个月都是全新的神,只是不保证上个月的你是不是欠了债。",
+    params: { everyActions: 3, buffs: ["atk999", "break100", "must_treasure", "stone_x10", "immune_all", "exp_x5", "charm_max"] } },
+  { id: "T_FATESON", name: "天命主角光环", grade: "彩", effectType: "protagonist",
+    desc: "你就是这本书的主角!每次濒死必然触发“危急关头爷爷附体/神秘戒指苏醒/路边老乞丐是大佬”三选一的奇遇,且死前必有人替你挡刀。作者亲儿子,谁来都得让道。",
+    params: { reviveChance: 1.0, perLifeTimes: 3 } },
+  { id: "T_SYSTEM", name: "签到系统(氪金版)", grade: "彩", effectType: "sign_in",
+    desc: "叮!宿主每次行动都自动签到,必得灵石、修为或随机神器。连续签到7次触发“七日大礼包”:一件仙器+一本功法。系统还会在你装逼之前贴心地提醒:“宿主,该打脸了。”",
+    params: { stoneBase: 200, streakReward: 7 } },
+  { id: "T_ALLDAO", name: "诸天万道亲和", grade: "彩", effectType: "all_dao",
+    desc: "你对所有大道的亲和度拉满:修炼收益×3,破境成功率+30%,看别人打架就能偷学招式。天道看了你的灵根报告,默默把自己的名字改成了“某某的小弟”。",
+    params: { expMul: 3, breakBonus: 0.3 } },
+
+  /* ---------------- 金:仙品 ---------------- */
+  { id: "T_BLOODCOW", name: "十里坡血牛", grade: "金", effectType: "blood_cow",
+    desc: "你的血池是个无底洞。每次点击任何行动,气血上限无脑+10000;战斗时附带自身气血上限20%的真实反伤。别人砍你一刀,他的刀先崩了;别人砍你十刀,他的肾先崩了。",
+    params: { hpPerAction: 10000, thornPct: 0.2 } },
+  { id: "T_REJECT", name: "被拒就变强", grade: "金", effectType: "reject_stronger",
+    desc: "向低好感NPC表白或求双修被拒绝时,修为和战力暴涨!“你不配”三个字,是你最好的修行口诀。莫欺少年穷,今日你拒我,明日我让你高攀不起——前提是你没被打死。",
+    params: { expPct: 0.15, powerPct: 0.1 } },
+  { id: "T_SWORDBONE", name: "先天剑骨", grade: "金", effectType: "sword_bone",
+    desc: "天生剑骨,与剑共鸣。用剑类物品或剑修类奇遇时收益×3,同阶越级斩杀概率+40%。别人是人剑合一,你是人就是剑,还是出鞘就要见血的那种。",
+    params: { swordMul: 3, killBonus: 0.4 } },
+  { id: "T_ALCHEMY", name: "丹道天骄", grade: "金", effectType: "alchemy",
+    desc: "开炉必成丹,十炉九出极品。你炼的丹药药效+100%,且有10%概率出现“丹成异象”直接送你一枚高阶丹药。连炼丹炉都想认你当爹,因为你炸炉的概率是0。",
+    params: { effectMul: 2, bonusChance: 0.1 } },
+  { id: "T_LUCKY", name: "欧皇附体", grade: "金", effectType: "lucky",
+    desc: "你出门必踩狗屎运。所有事件判定,成功率额外+25%,抽卡必出保底。别人开箱子靠命,你开箱子靠“我家祖坟冒的青烟比别人的烟囱还粗”。",
+    params: { successBonus: 0.25 } },
+  { id: "T_LONGLIFE", name: "王八寿元", grade: "金", effectType: "long_life",
+    desc: "活得久才是真本事。初始寿元+100年,每次突破额外寿元+30%。别人在拼命,你在拼命活着;最后拼命的都进了祖坟,你把他们的祭文念了一遍。",
+    params: { startLife: 100, breakLifePct: 0.3 } },
+  { id: "T_BEAUTY", name: "谪仙之貌", grade: "金", effectType: "beauty",
+    desc: "颜值破表,魅力+50。所有NPC初见好感+30,送礼好感翻倍。长得帅的修仙者,出门打架都带着滤镜,对面女修的刀都会偏三寸。",
+    params: { charm: 50, firstFavor: 30, giftMul: 2 } },
+  { id: "T_HARDEMPEROR", name: "老阴比", grade: "金", effectType: "sly",
+    desc: "苟字诀大成:遇敌时可100%无损撤退,并随机偷走对方一件物品。阴人之前先自我介绍:“在下人畜无害,有话好说。”下一秒,他的宝库已经空了。",
+    params: { escape: 1.0, steal: true } },
+  { id: "T_ROBBER", name: "天生劫修", grade: "金", effectType: "robber",
+    desc: "你有个天赋:杀人越货。每次击败对手,额外掠夺其全部灵石的200%(系统会凭空补差)。有人说你缺德,你说“我这是替天行道”。",
+    params: { lootMul: 3 } },
+
+  /* ---------------- 紫:奇葩/邪魔 ---------------- */
+  { id: "T_FATHER", name: "大孝子系统", grade: "紫", effectType: "adopt_father",
+    desc: "奇遇或遇敌时可“认人当义父”:直接复制对方一半修为和灵石!但3年内义父必然暴毙,并引来强力仇家,自动录入仇人录。认爹一时爽,全家火葬场,但真香。",
+    params: { copyPct: 0.5, deathYears: 3, revengeLevel: 2 } },
+  { id: "T_DEVOUR", name: "吞天魔功(残)", grade: "紫", effectType: "devour",
+    desc: "击败敌人后可选择“吞噬”:吸取对方50%修为,但每吞一人,心魔+1。心魔满10点,你会被当成魔头,全修仙界追杀。吞得越多越想吞,别人叫你魔头,你叫自己“食堂大妈”。",
+    params: { absorbPct: 0.5, demonPerKill: 1, demonMax: 10 } },
+  { id: "T_HAREM", name: "后宫三千劫", grade: "紫", effectType: "harem",
+    desc: "道侣上限不限,每多一位道侣,战力+8%。但每次新增道侣,所有旧道侣有30%概率“修罗场”,爆发后你可能要掉一半修为。为了后宫你愿意被捅,谁让你是个永远在被捅的路上还笑着的好男人。",
+    params: { powerPerWife: 0.08, fightChance: 0.3, lossPct: 0.5 } },
+  { id: "T_PILLGOD", name: "丹药当饭吃", grade: "紫", effectType: "pill_eater",
+    desc: "你的肠胃是个黑洞。服用丹药不会产生抗药性,且每颗丹药额外触发一次效果。但每年需要消耗10颗丹药否则失控暴走。丹毒?你不认识这两个字,但丹毒认识你。",
+    params: { doubleEffect: true, yearlyCost: 10 } },
+  { id: "T_BARDHEART", name: "嘴遁大师", grade: "紫", effectType: "mouth_master",
+    desc: "你的嘴是真正的杀器。遇敌时可“嘴遁”劝降对手(成功率与魅力正相关),成功则对方当场拜你为主。失败则被反杀,但失败的台词也能让你得一点修为。你的杀招叫“你听我解释”。",
+    params: { baseRate: 0.3, charmScale: 0.005 } },
+  { id: "T_NTR", name: "牛头人克星", grade: "紫", effectType: "anti_ntr",
+    desc: "道侣被抢时,你会觉醒“绿帽神功”:战力×5,持续10年。很荒谬,但是真的有效。只要你足够绿,就没有人能超越你的境界(绿色代表生命与希望)。",
+    params: { powerMul: 5, years: 10 } },
+  { id: "T_ALCOHOL", name: "酒剑仙", grade: "紫", effectType: "drunk_sword",
+    desc: "喝酒后战力翻3倍,但喝醉后有50%概率乱说话得罪人,并获得一个随机仇人。醉里挑灯看剑,醒来满地仇家。诗仙李白看了都得敬你三杯。",
+    params: { powerMul: 3, offendChance: 0.5 } },
+  { id: "T_MEME", name: "沙雕之王", grade: "紫", effectType: "meme",
+    desc: "你的行为不可预测,所有事件结果随机翻转一次(好变坏、坏变好)。天道看你也看不懂,一边骂娘一边给你开挂,因为它算不出你下一步会不会把天捅个窟窿。",
+    params: { flipChance: 0.5 } },
+  { id: "T_DEMONHEART", name: "魔心种子", grade: "紫", effectType: "demon_seed",
+    desc: "体内埋着一颗魔种。每年修为自动增长10%,但每满10年必须献祭一位亲近之人(好感最高者),否则修为清零。魔种教你修行:要想强,先送走身边的善良人。",
+    params: { yearlyExpPct: 0.1, sacrificeYears: 10 } },
+  { id: "T_COPYCAT", name: "拷贝忍者", grade: "紫", effectType: "copycat",
+    desc: "每次目睹他人施法,有20%概率复制该招式。可以反复使用,直到被原主发现。原主:你这个孽障,偷的是我三年的心血!你:我只是在致敬。",
+    params: { copyChance: 0.2 } },
+
+  /* ---------------- 黑:天谴/负面 ---------------- */
+  { id: "T_LONESTAR", name: "天煞孤星", grade: "黑", effectType: "lone_star",
+    desc: "每年身边好感最高的人有概率暴毙,你继承其全部遗产和修为。孤独是强者的宿命,你可以选择把朋友都送走,也可以选择不交朋友,但无论如何,你的朋友圈总在缩水。",
+    params: { yearlyDeathChance: 0.12, inheritPct: 1.0 } },
+  { id: "T_UNLUCKY", name: "非酋之王", grade: "黑", effectType: "unlucky",
+    desc: "你的运气永远是负数。所有事件成功率-20%,喝凉水塞牙,走路踩狗屎,买彩票能中“谢谢参与”。但死的时候,天道会给你补偿一次“重开”机会。",
+    params: { successPenalty: 0.2, reviveOnce: true } },
+  { id: "T_CURSE", name: "天道弃子", grade: "黑", effectType: "cursed",
+    desc: "天道嫌弃你,每次突破都会引来额外一道雷劫(失败率+20%)。你的雷劫比别人的粗三倍,劈完还会补一句“废物,你怎么还不死”。",
+    params: { breakPenalty: 0.2 } },
+  { id: "T_POOR", name: "穷鬼转世", grade: "黑", effectType: "poor",
+    desc: "你的灵石会在月圆之夜莫名消失10%。所有物品价格对你+50%。但你有一个隐藏福利:每次花光灵石,有概率触发“路边捡到神秘小袋子”。",
+    params: { yearlyStoneLoss: 0.1, priceMul: 1.5 } },
+  { id: "T_WEAKBODY", name: "先天不足", grade: "黑", effectType: "weak_body",
+    desc: "你的体质先天虚弱,每次战斗气血-30%,但悟性+30。上天对你关上了一扇门,又顺手把窗户焊死了,然后塞给你一本《如何靠嘴炮活下去》。",
+    params: { hpPenalty: 0.3, wit: 30 } },
+  { id: "T_NTRTARGET", name: "头顶青青草原", grade: "黑", effectType: "cuckold_fate",
+    desc: "每个你追求的NPC有30%概率被别人抢走(NTR),抢走后你的心境崩塌,修为-10%。可是……你的修为会在“心如死灰”之后涨得飞快,这就叫“悲愤出强者”。",
+    params: { ntrChance: 0.3, expLossPct: 0.1 } },
+  { id: "T_SHORTLIFE", name: "红颜薄命", grade: "黑", effectType: "short_life",
+    desc: "初始寿元-30年,但所有NPC对你好感初始+20(因为你看起来命不久矣)。同情分爆棚,你死的时候她们会哭得很大声,不过也只有哭而已。",
+    params: { startLife: -30, firstFavor: 20 } },
+  { id: "T_BETRAY", name: "背刺体质", grade: "黑", effectType: "betrayed",
+    desc: "身边的好友和道侣每年有10%概率背叛你,并带走你一件物品。人心隔肚皮,你的肚皮上刻满了“信任”两个字,然后被划了十七刀。",
+    params: { yearlyBetrayChance: 0.1 } }
+];
+
+/* ============================ 三、初始身份库 IDENTITIES ============================
+   bound: { type: "spouse"|"enemy"|"master"|"none", npc: NPC的id } */
+const IDENTITIES = [
+  { id: "I01", name: "被当众退婚的废柴少主", icon: "💔", life: 70, stone: 50, exp: 0,
+    stats: { body: 8, wit: 12, luck: 6, charm: 14 },
+    intro: "“三十年河东,三十年河西,莫欺少年穷!”你站在大殿中央,看着未婚妻将婚书撕成两半。她身后站着新欢——天骄榜第七。围观群众嗑着瓜子,有人悄悄押注你会不会当场哭出来。你深吸一口气,腰间的破玉佩忽然微微发烫……",
+    bound: { type: "enemy", npc: "N02" }, tip: "开局自带退婚仇怨,打脸条件已满足。" },
+  { id: "I02", name: "合欢宗刚抓来的极品炉鼎", icon: "🔥", life: 60, stone: 0, exp: 0,
+    stats: { body: 16, wit: 6, charm: 18, luck: 4 },
+    intro: "你睁开眼,头顶是粉色纱帐,手腕上是锁灵链。圣女正歪在榻边,笑吟吟地说:“小弟弟,从今天起,你就是本宫的人了。”你的体质被检测为“纯阳无漏之体”,全宗上下的眼睛都在发光,像是饿了三百年的狼看到了热腾腾的包子。",
+    bound: { type: "spouse", npc: "N03" }, tip: "被圣女看上,不知是福是祸。" },
+  { id: "I03", name: "寿元只剩3年的魔道老祖", icon: "💀", life: 3, stone: 8000, exp: 60000,
+    stats: { body: 20, wit: 25, luck: 3, charm: 10 },
+    intro: "你是纵横魔道三千年的老祖,如今阳寿将尽。弟子们哭哭啼啼,实则都在盘算着怎么分你的遗产。你眯着眼睛说:“都出去,让老夫静静。”门关上的那一刻,你从床板下摸出一本《夺舍秘术》,舔了舔干裂的嘴唇……",
+    bound: { type: "enemy", npc: "N07" }, tip: "时间紧迫,3年内必须找到延寿之法。" },
+  { id: "I04", name: "青楼扫地杂役", icon: "🧹", life: 65, stone: 20, exp: 0,
+    stats: { body: 10, wit: 10, luck: 12, charm: 8 },
+    intro: "春风楼后院,你拿着扫帚,默默扫着客人吐的瓜子壳。头牌花魁路过时,淡淡看了你一眼,说:“那个扫地的,眼神不错。”你不知道的是,你这把扫帚,是三千年前某位大能的本命法宝,正在偷偷吸收你的洗脚水。",
+    bound: { type: "spouse", npc: "N09" }, tip: "身份卑微,但扫帚不简单。" },
+  { id: "I05", name: "镇压在锁妖塔底的残魂", icon: "👻", life: 500, stone: 0, exp: 30000,
+    stats: { body: 1, wit: 40, luck: 8, charm: 12 },
+    intro: "万年了,你只剩一缕残魂,被封印在锁妖塔最底层。头顶是一万道符咒,脚下是一堆发霉的白骨。忽然,一个小丫头偷偷溜进塔里,捡起了你的“本体”——一块黑乎乎的玉佩,并随手塞进了腰包。你的魂体悠悠转醒:“终于有人了!”",
+    bound: { type: "master", npc: "N01" }, tip: "残魂状态,需要宿主。" },
+  { id: "I06", name: "气运之子的舔狗师弟", icon: "🐶", life: 70, stone: 100, exp: 0,
+    stats: { body: 9, wit: 11, luck: 2, charm: 11 },
+    intro: "你的师兄是天命之子,走到哪里都有绝色美女主动送上门。你是他的跟班,专门负责端茶倒水、背锅挨打。今天他又拿到了一件仙器,你站在旁边“哇哦”了一声——你已经连续“哇哦”了十年。你开始怀疑:自己是不是天生的配角?",
+    bound: { type: "enemy", npc: "N10" }, tip: "苦逼配角,需要逆袭。" },
+  { id: "I07", name: "天道遗弃的半步仙人", icon: "⚡", life: 150, stone: 3000, exp: 90000,
+    stats: { body: 25, wit: 22, luck: 1, charm: 15 },
+    intro: "你本是飞升路上的天才,结果雷劫劈到一半,天道临时改了规则——你被扔回了凡间,修为被压制回炼气期。你站在山脚下,身上冒着青烟:“我谢谢你全家。”远处,同样被劈下来的几位老友正在排队领救济灵石。",
+    bound: { type: "none", npc: null }, tip: "高起点,但被天道针对。" },
+  { id: "I08", name: "穿越成猪的魔界太子", icon: "🐷", life: 40, stone: 0, exp: 0,
+    stats: { body: 18, wit: 5, luck: 9, charm: 3 },
+    intro: "你醒来时发现自己是一头猪,一头被圈养在宗门后山的灵猪。屠夫正磨刀霍霍,你的内心在咆哮:“我可是魔界太子!我要吃人……不对,我要吃饭!”你的猪蹄子里竟隐隐有魔气涌动,如果你能逃出去的话……",
+    bound: { type: "enemy", npc: "N06" }, tip: "极限开局,首先要活过今晚。" },
+  { id: "I09", name: "刚被夺舍失败的老爷爷之孙", icon: "🧓", life: 75, stone: 500, exp: 5000,
+    stats: { body: 11, wit: 14, luck: 10, charm: 9 },
+    intro: "祖父的戒指里住着一个老爷爷。他夺舍过三十一次,全部失败。第三十二次,他选了你。结果你的灵魂强度居然压过了他,老爷爷被你反向关进了戒指里,哭着喊:“小友饶命!老夫愿意传你三百年修为!”",
+    bound: { type: "master", npc: "N05" }, tip: "戒指老爷爷是你的随身导师(奴隶)。" },
+  { id: "I10", name: "仙子的洗脚婢转世", icon: "🦶", life: 80, stone: 80, exp: 0,
+    stats: { body: 9, wit: 13, luck: 10, charm: 16 },
+    intro: "你前世是某仙子的洗脚婢,日日为她洗脚、梳头、端茶、听八卦,知道的秘密比她的丫鬟还多。你被仙子灭口之后轮回转世,醒来时发现自己带着前世的全部记忆——包括她那些见不得人的小秘密。",
+    bound: { type: "enemy", npc: "N01" }, tip: "手握前世秘闻,可以威胁(或者被威胁)。" },
+  { id: "I11", name: "万年单身的剑修", icon: "🗡️", life: 90, stone: 300, exp: 8000,
+    stats: { body: 18, wit: 12, luck: 5, charm: 6 },
+    intro: "你是一个万年没谈过恋爱的剑修,你手中的剑比你的情商高一万倍。同门师姐给你递了封情书,你回了一句:“剑道无情,勿扰。”师姐当场哭了,你的剑也哭了——因为它也想谈恋爱。",
+    bound: { type: "none", npc: null }, tip: "高战力低情商,适合走孤傲路线。" },
+  { id: "I12", name: "妖族女帝的逃婚驸马", icon: "🐍", life: 100, stone: 1000, exp: 12000,
+    stats: { body: 14, wit: 10, luck: 7, charm: 17 },
+    intro: "你是妖族女帝亲自点名的驸马,婚礼当天你从窗户翻了出去,一口气逃了三千里。女帝在身后追得杀气腾腾:“你以为你逃得掉吗?孤的驸马!”你一边狂奔一边喊:“我是认真的,我真的不想继承妖族的万亿家产啊!”",
+    bound: { type: "spouse", npc: "N04" }, tip: "被一位帝王级大佬追着跑。" },
+  { id: "I13", name: "被抢了机缘的路人甲", icon: "🎭", life: 70, stone: 20, exp: 0,
+    stats: { body: 9, wit: 11, luck: 15, charm: 9 },
+    intro: "你刚在山洞里捡到一枚储物戒指,结果下一秒一个“气运之子”冲进来,指着你说:“这是我的机缘!”随即打了你三个耳光,拿走了戒指。你捂着脸,发现他拿走的只是一个空戒指,真正的传承,你藏在了嘴里。",
+    bound: { type: "enemy", npc: "N10" }, tip: "反派的运气已用尽。" },
+  { id: "I14", name: "九世善人的转世", icon: "😇", life: 120, stone: 200, exp: 3000,
+    stats: { body: 10, wit: 15, luck: 25, charm: 12 },
+    intro: "你前九世都是大善人,却都落得凄惨下场。第十世,天道认为必须给你补偿,于是你一出生就带着九世功德金光。可惜,这金光太亮,走到哪里都被妖魔鬼怪围观,你只想安安静静做个咸鱼。",
+    bound: { type: "master", npc: "N08" }, tip: "功德值爆表,但容易被觊觎。" },
+  { id: "I15", name: "鬼畜区UP主穿越者", icon: "📱", life: 70, stone: 100, exp: 0,
+    stats: { body: 8, wit: 18, luck: 10, charm: 15 },
+    intro: "你前世是个混B站的鬼畜区UP主,穿越到修仙界后第一件事就是掏出手机……没信号。你叹了口气,心想:“修仙界也该有个直播平台了。”下一刻,你开始用灵力直播自己的炼气过程,居然吸引了三千个“道友”打赏灵石。",
+    bound: { type: "none", npc: null }, tip: "网络梗的天然受益者。" },
+  { id: "I16", name: "宗门祖师爷的私生子", icon: "👑", life: 85, stone: 5000, exp: 2000,
+    stats: { body: 12, wit: 12, luck: 8, charm: 14 },
+    intro: "你的真实身份是宗门祖师爷的私生子,这个秘密只有你的母亲知道。你的母亲去世前留下一枚信物:“拿着它,去找掌门。”你现在站在掌门殿外,手里握着那枚玉佩,心里想:“我要不要去认亲?万一祖师爷已经被气死了怎么办?”",
+    bound: { type: "master", npc: "N01" }, tip: "身份尊贵,但认亲有风险。" }
+];
+
+/* ============================ 四、绝色NPC库 NPCS ============================
+   realm: 对应REALMS的id  favor: 初始好感(-100~100)  beauty:颜值(0-100)  */
+const NPCS = [
+  { id: "N01", name: "月清寒", title: "高冷师尊", traits: ["冰山", "护短", "外冷内热", "洁癖"], beauty: 98, realm: 12, favor: 10,
+    kind: "师尊", desc: "万年冰山一座,看谁都像看蝼蚁,唯独看你时眼神会多停留半秒。她的口头禅是:“为师没有感情。”但你的衣服总是莫名其妙地被洗干净。" },
+  { id: "N02", name: "苏婉儿", title: "退婚未婚妻", traits: ["势利", "高傲", "口嫌体正", "爱面子"], beauty: 92, realm: 9, favor: -30,
+    kind: "未婚妻", desc: "当众退婚的主角,三年后在你面前泪流满面地说“我当初是有苦衷的”。当你冷冷地说“莫欺少年穷”时,她的脸色比天劫还好看。" },
+  { id: "N03", name: "媚红袖", title: "合欢宗圣女", traits: ["妖娆", "占有欲强", "心机", "爱说反话"], beauty: 99, realm: 11, favor: 20,
+    kind: "圣女", desc: "合欢宗年轻一代第一人,出场必伴随花香与脚步声。她嘴上说着“小弟弟别怕”,手里却攥着你的命门。你不知道她是喜欢你,还是单纯想采你。" },
+  { id: "N04", name: "九幽玄凰", title: "妖族女帝", traits: ["霸道", "傲娇", "睚眦必报", "护犊子"], beauty: 100, realm: 14, favor: 0,
+    kind: "女帝", desc: "统御万妖的九尾狐女帝,一根尾巴能压塌一座山脉。她最爱的口头禅是:“孤的驸马,你逃不掉了。”最怕的事是你真的逃掉了。" },
+  { id: "N05", name: "白若雪", title: "病娇师妹", traits: ["病娇", "偏执", "黏人", "温柔刀"], beauty: 95, realm: 8, favor: 40,
+    kind: "师妹", desc: "每天笑眯眯地给你送汤,汤里有时是灵药,有时是……你不敢细想。她的床底下藏着一整套你的衣服、头发和用过的筷子,但她说那只是“收藏”。" },
+  { id: "N06", name: "赤练仙子", title: "魔宗毒姬", traits: ["毒舌", "冷艳", "毒术宗师", "爱财如命"], beauty: 90, realm: 10, favor: -10,
+    kind: "魔女", desc: "魔宗最毒的女人,指甲缝里都是剧毒。她爱财如命,你给得起价钱就能让她当保镖,给不起价钱就会变成她新毒药的试药员。" },
+  { id: "N07", name: "洛神璃", title: "洛水河神", traits: ["神秘", "清冷", "爱捉弄人", "水系神通"], beauty: 97, realm: 13, favor: 5,
+    kind: "神女", desc: "洛水之畔的河神,每逢月圆就会现身。她喜欢捉弄路过的修士,把人推进水里再捞起来,美其名曰“洗礼”。你已经是第七十七位被洗礼的倒霉蛋。" },
+  { id: "N08", name: "慕容雪衣", title: "正道第一女侠", traits: ["正义", "直爽", "路痴", "爱吃"], beauty: 91, realm: 11, favor: 25,
+    kind: "女侠", desc: "一手剑法天下无双,可是路痴到令人发指。她出门历练总要带上你这个“人肉导航”,并且每次都会说:“我没迷路,我只是在探索。”" },
+  { id: "N09", name: "花想容", title: "春风楼头牌", traits: ["风情", "世故", "知晓秘辛", "深藏不露"], beauty: 96, realm: 7, favor: 15,
+    kind: "花魁", desc: "春风楼的头牌,消息比情报组织还灵通。她看上去只是个青楼女子,实际上是某大宗门的暗桩,你跟她睡一晚,能换来三个宗门的绝密情报。" },
+  { id: "N10", name: "夜轻眉", title: "气运之子的青梅竹马", traits: ["天真", "傻白甜", "容易被骗", "死心塌地"], beauty: 93, realm: 8, favor: 30,
+    kind: "青梅", desc: "你的青梅竹马,却一门心思喜欢那个气运之子。她会天真地问你:“他是不是喜欢我?”你只能苦笑:“他喜欢的是你的钱。”她怒了,然后继续喜欢他。" },
+  { id: "N11", name: "古灵儿", title: "古灵精怪小妖女", traits: ["古灵精怪", "爱恶作剧", "话痨", "擅长易容"], beauty: 88, realm: 9, favor: 35,
+    kind: "妖女", desc: "总爱把你耍得团团转的小妖女。昨天她变成你师父的模样骗了你一顿饭,今天她变成你的模样骗了你师父的灵石。你还没发现的是,她其实一直在偷偷喜欢你。" },
+  { id: "N12", name: "凤栖梧", title: "魔道圣女·黑化师姐", traits: ["黑化", "腹黑", "偏爱", "杀伐果断"], beauty: 94, realm: 12, favor: -5,
+    kind: "师姐", desc: "曾经是你的温柔师姐,三年前被宗门背叛后黑化。如今她一袭红衣立于尸山血海之上,对你说:“师弟,跟师姐走吧,这宗门,不值得。”" },
+  { id: "N13", name: "墨无痕", title: "宿敌·天骄榜第一", traits: ["傲慢", "天才", "洁癖", "有点中二"], beauty: 90, realm: 11, favor: -40,
+    kind: "宿敌", desc: "天骄榜第一的男修,偏偏处处与你作对。他每次出场都会先说一句:“蝼蚁。”然后被你反杀,再留下一句:“你给我等着!”如此循环,已经成为修仙界的固定节目。" }
+];
+
+/* ============================ 五、子嗣灵根体质库 CHILD_ROOTS ============================
+   weight:抽取权重  feedMul:反哺修为倍率(成年后每年反哺 = 父母基础修为 × feedMul%)
+   statBonus:子嗣成年后加到玩家的四维  */
+const CHILD_ROOTS = [
+  { id: "R01", name: "凡品杂灵根", grade: "凡", weight: 40, feedMul: 0.5,  statBonus: 0,  color: "tier-common", desc: "五行杂乱,资质平庸。孩子在村口玩泥巴,你在洞府里炼丹,他问你:“爹,我能不能不修仙?”" },
+  { id: "R02", name: "玄品双灵根", grade: "玄", weight: 28, feedMul: 1.2,  statBonus: 1,  color: "tier-good", desc: "水火双灵根,勉强能入门。孩子每天都在洗脸盆里放火,然后惊讶地说“好烫”。" },
+  { id: "R03", name: "地品单灵根", grade: "地", weight: 16, feedMul: 3,    statBonus: 3,  color: "tier-rare", desc: "单一属性,修炼速度极快。孩子很争气,三岁引气入体,五岁炼气三层,比你当年快了一半。" },
+  { id: "R04", name: "天品灵根", grade: "天", weight: 8,  feedMul: 8,    statBonus: 6,  color: "tier-epic", desc: "天生灵体,宗门长老争着收徒。孩子出生那天,天降异象,三千里内的灵植全都开了花。" },
+  { id: "R05", name: "仙品灵根", grade: "仙", weight: 4,  feedMul: 20,   statBonus: 10, color: "tier-legend", desc: "万中无一的仙品灵根。孩子一岁半就会御剑,两岁就能和你吵架,三岁开始质疑你的修行方式。" },
+  { id: "R06", name: "【至尊骨】", grade: "至尊", weight: 2.2, feedMul: 60,   statBonus: 18, color: "tier-legend", desc: "传说中的至尊骨。孩子一出生,九天雷鸣,仙乐阵阵,连天道都派了使者来贺喜。你的孩子是真正的天选之子,你只是一个负责掏钱的父亲。" },
+  { id: "R07", name: "【重瞳】", grade: "至尊", weight: 1.2, feedMul: 100,  statBonus: 25, color: "tier-legend", desc: "双瞳并列,洞穿虚妄。孩子看你的眼神是这样的:“爹,你在想什么我都知道,别想了,你欠我的零花钱还没给。”" },
+  { id: "R08", name: "【混沌仙胎】", grade: "至尊", weight: 0.4, feedMul: 300,  statBonus: 40, color: "rainbow-text", desc: "混沌初开,先天地而生。孩子一出生就把接生婆吓晕了,因为婴儿的啼哭声直接劈开了一座山。有天道亲自出面认干亲。" },
+  { id: "R09", name: "【先天道体】", grade: "至尊", weight: 0.2, feedMul: 500,  statBonus: 60, color: "rainbow-text", desc: "道生一,一生二,二生三,三生万物。孩子不用修炼,呼吸即是修炼,睡觉即是悟道。你在旁边默默地想:“我是不是该给他当儿子?”" }
+];
+
+/* ============================ 六、万宝楼与返还物品库 ITEMS ============================
+   tier: 品阶  price: 万宝楼价格(灵石)  use: 使用效果(fx格式,与事件通用)  shop:是否在商店出售  */
+const ITEMS = [
+  { id: "P01", name: "聚气丹", tier: "凡品", price: 30, shop: true, type: "丹药",
+    desc: "最基础的丹药,吃了能让你的丹田舒服得像泡了温泉。", use: { exp: 120 } },
+  { id: "P02", name: "培元丹", tier: "良品", price: 120, shop: true, type: "丹药",
+    desc: "培元固本,服后修为稳步提升,没有副作用,除了贵。", use: { exp: 600, hp: 200 } },
+  { id: "P03", name: "破境丹", tier: "上品", price: 800, shop: true, type: "丹药",
+    desc: "传说中的“突破神器”,服用后下一次突破成功率+30%。突破失败的修士们抱着空瓶子哭了一整晚。", use: { breakBonus: 0.3 } },
+  { id: "P04", name: "九转延寿丹", tier: "极品", price: 3000, shop: true, type: "丹药",
+    desc: "九转金丹,延年益寿。丹方来自一位活了五千年的老道,据说他吃了自己炼的这枚丹药,又活了五千年——然后被炼丹炉砸死了。", use: { life: 100 } },
+  { id: "P05", name: "多子多福丸", tier: "仙品", price: 6000, shop: true, type: "丹药",
+    desc: "服用后一年内道侣必定受孕,且孩子灵根品质必定提升一档。副作用:你会被所有已婚的道友盯上。", use: { child: true, childBoost: 1 } },
+  { id: "P06", name: "驻颜丹", tier: "良品", price: 200, shop: true, type: "丹药",
+    desc: "女修们的最爱,男修们的偷偷最爱。服用后魅力+3,并抵消三年苍老。", use: { charm: 3 } },
+  { id: "P07", name: "诛仙剑", tier: "仙器", price: 30000, shop: true, type: "兵器",
+    desc: "一剑出,诸仙退。剑身上刻着“我是剑中一号”,战力永久+50%。注意:此剑有灵,脾气暴躁,拔剑时有20%概率先砍自己。", use: { power: 0.5 } },
+  { id: "P08", name: "合欢散", tier: "禁品", price: 500, shop: true, type: "毒药",
+    desc: "道友们心照不宣的“小药丸”,对异性NPC使用,好感大幅提升,但可能引发后续的“清算”。万宝楼老板对此笑而不语。", use: { favor: 40, risk: 0.3 } },
+  { id: "P09", name: "洗髓伐骨丹", tier: "极品", price: 2500, shop: true, type: "丹药",
+    desc: "洗去凡胎,脱骨换髓。服后体魄+8,悟性+4。过程十分痛苦,但出来的时候你会觉得整个世界都是新的。", use: { body: 8, wit: 4 } },
+  { id: "P10", name: "悟道茶", tier: "极品", price: 2200, shop: true, type: "灵茶",
+    desc: "喝一口,看见大道三千;喝两口,看见祖宗十八代。悟性+10,但有5%概率喝成“茶醉”,三天不省人事。", use: { wit: 10 } },
+  { id: "P11", name: "渡劫护身符", tier: "仙品", price: 9000, shop: true, type: "符箓",
+    desc: "渡劫时可抵挡一次致命天雷。符上写着“天雷滚滚,莫挨我”,字迹十分潦草,是某位练气期弟子画的,但真的有用。", use: { shield: 1 } },
+  { id: "P12", name: "储物戒(下品)", tier: "凡品", price: 150, shop: true, type: "法器",
+    desc: "能装下一间屋子的东西。用来装灵石、装功法、装别人的尸体都行。", use: { stone: 0 } },
+  { id: "P13", name: "回春丹", tier: "良品", price: 90, shop: true, type: "丹药",
+    desc: "救命的丹药,咽下去能从半死不活变成半活不死。", use: { hp: 500 } },
+  { id: "P14", name: "天机算", tier: "上品", price: 1500, shop: true, type: "法器",
+    desc: "一次性占卜法器,可预知下一个事件的所有选项成功率。算命先生说:“天机不可泄露”,但他拿了钱就泄了。", use: { luck: 6 } },
+  { id: "P15", name: "夺舍令", tier: "禁品", price: 12000, shop: true, type: "禁物",
+    desc: "邪修必备。可对寿元将尽的对手发动夺舍,成功率50%,失败则被反噬陨落。真正的“赌上性命的买卖”。", use: { adopt: true, risk: 0.5 } },
+  { id: "P16", name: "万倍返还·仙丹", tier: "天品", price: 0, shop: false, type: "丹药",
+    desc: "【舔狗万倍返还】触发时掉落。服下后修为暴涨,同时寿元+300年。女神说你是好人,天道说你是爹。", use: { exp: 200000, life: 300 } },
+  { id: "P17", name: "神级功法残卷", tier: "天品", price: 0, shop: false, type: "功法",
+    desc: "【舔狗万倍返还】触发时掉落。残卷一页,足以让你的悟性+20,战力永久+30%。", use: { wit: 20, power: 0.3 } },
+  { id: "P18", name: "海量灵石袋", tier: "天品", price: 0, shop: false, type: "财宝",
+    desc: "【舔狗万倍返还】触发时掉落。一袋子灵石,倒出来能砸死一头牛。", use: { stone: 100000 } },
+  { id: "P19", name: "玉女心经", tier: "仙品", price: 5000, shop: true, type: "功法",
+    desc: "女修专属功法的男用改版。修为+3000,魅力+6。修习时常常需要对着镜子练习“温柔地笑”。", use: { exp: 3000, charm: 6 } },
+  { id: "P20", name: "护道金身符", tier: "上品", price: 700, shop: true, type: "符箓",
+    desc: "遇敌时可抵挡一次致命攻击,并让对方的攻击者短暂陷入“我为什么要打这个人”的迷茫。", use: { shield: 1 } },
+  { id: "P21", name: "天道结晶", tier: "天品", price: 0, shop: false, type: "天材",
+    desc: "极其罕见的天道残片。持有者气运+30,所有事件成功率永久+5%。这玩意儿放在拍卖会上,能把一座城拍得倾家荡产。", use: { luck: 30 } },
+  { id: "P22", name: "仇人录·解怨符", tier: "上品", price: 1000, shop: true, type: "符箓",
+    desc: "可从仇人录中划去一个仇人。符纸上写着:“冤家宜解不宜结”,下面却是一行小字:“除非那家伙已经死了”。", use: { removeEnemy: 1 } }
+];
+
+/* ============================ 七、奇遇事件库 EVENTS ============================
+   choice 字段: label 选项文字, risk 风险(低/中/高/天机), need 需要拥有的天赋id(可选),
+                outcomes: [{ w 权重, text 文本, fx 效果, kind: good/bad/rare/epic }]
+   文本里的 {npc} 将被替换为当前相关NPC名字(第二部分实现) */
+const EVENTS = [
+  { id: "E01", title: "万宝楼拍卖会装逼",
+    text: "万宝楼三楼拍卖会,一枚“九转还魂丹”被炒到十万灵石,你身旁的富二代金少爷正得意洋洋地举着牌子。他回头冲你一笑:“穷鬼,你也配来这里?”你摸了摸干瘪的钱袋,感觉到全场的目光都在你身上。",
+    choices: [
+      { label: "抬价到底,不装逼我就浑身难受", risk: "高", outcomes: [
+        { w: 40, kind: "good", text: "你一口气喊出十五万灵石,全场哗然!金少爷脸色发青,默默放下牌子。你拿到仙丹,心里却在滴血——因为钱是借的。", fx: { exp: 5000, life: 30, stone: -150 } },
+        { w: 35, kind: "bad", text: "你喊价喊到一半被拍卖师当场拆穿:“这位客官,您的钱袋里只有三块灵石。”全场哄堂大笑,金少爷当场叫你“灵石大侠”。", fx: { stone: -80, charm: -2, enemy: { name: "金少爷", power: 3 } } },
+        { w: 25, kind: "rare", text: "你装逼装到一半,台上突然飞来一位神秘女修,盯着你说:“这位公子眼光不错。”她替你付了款,并留下一块玉牌后飘然离去。", fx: { exp: 3000, item: "P02", favor: 20 } }
+      ]},
+      { label: "默默观察,偷偷记下富二代的把柄", risk: "低", outcomes: [
+        { w: 60, kind: "good", text: "你冷眼旁观,发现金少爷的玉佩竟是赝品。你悄悄放出消息,拍卖会当场炸锅。他被逐出万宝楼,你赚了一笔情报费。", fx: { stone: 120, wit: 1 } },
+        { w: 40, kind: "bad", text: "你看了半天,什么也没看出来。回家后发现钱袋被偷了。", fx: { stone: -40 } }
+      ]},
+      { label: "【舔狗万倍返还】替旁边的小姐姐出价送给她", risk: "天机", need: "T_LICKDOG", outcomes: [
+        { w: 100, kind: "epic", text: "你替身旁清冷的女修拍下了仙丹,她表情复杂地说:“你……为什么要这样?”你憨憨地说:“因为你好看。”系统:叮——万倍返还触发!她转身递来一枚天品仙丹,眼中泛红:“我欠你的,下辈子还。”", fx: { item: "P16", favor: 50, stone: -150 } }
+      ]}
+    ]},
+  { id: "E02", title: "秘境夺宝·天骄云集",
+    text: "万年秘境开启,各大宗门的天骄云集。你站在人群中,看着前方的传承宝殿金光四射,而宝殿门口有三个大佬正在打架:一个骂“这是我的”,一个骂“明明是我先看到的”,第三个吃瓜群众在旁边鼓掌:“打得好!”",
+    choices: [
+      { label: "趁乱溜进宝殿,偷拿宝物", risk: "高", outcomes: [
+        { w: 35, kind: "rare", text: "你像泥鳅一样滑进去,抱起宝物就跑。身后传来三个大佬的怒吼:“那个小子!”你头也不回地跑出三千里,发现手里抱的是一件上古仙器。", fx: { item: "P07", enemy: { name: "秘境三雄", power: 6 } } },
+        { w: 40, kind: "bad", text: "你刚摸到宝箱,三个大佬同时回头。一人一巴掌把你拍出了宝殿。", fx: { hp: -300, life: -3 } },
+        { w: 25, kind: "good", text: "你抱着宝物从暗道溜走,三个大佬还在为谁先摸到宝物打得头破血流。", fx: { exp: 6000, stone: 400 } }
+      ]},
+      { label: "加入战团,当一个有素质的吃瓜群众", risk: "低", outcomes: [
+        { w: 70, kind: "good", text: "你找了个安全位置嗑瓜子,捡了不少战斗后飞出来的灵石碎片。", fx: { stone: 200, exp: 800 } },
+        { w: 30, kind: "bad", text: "吃瓜吃到一半,被流弹误伤,躺了三个月。", fx: { hp: -200, life: -2 } }
+      ]},
+      { label: "【老阴比】装死到最后,等他们都两败俱伤", risk: "低", need: "T_HARDEMPEROR", outcomes: [
+        { w: 100, kind: "rare", text: "你一动不动躺在角落里,三个大佬同归于尽。你站起来拍了拍灰,从他们身上摸出三个储物戒,并有礼貌地说:“多谢三位前辈款待。”", fx: { stone: 3000, exp: 8000, item: "P03" } }
+      ]}
+    ]},
+  { id: "E03", title: "英雄救美·仙子落难",
+    text: "山道上,一位绝色女修被三名魔道修士围住。女修衣衫凌乱,咬着嘴唇颤声说:“你们……放开我!”你从旁边路过,手里的酱香大饼还冒着热气。三名魔修齐刷刷转头看你:“看什么看?”",
+    choices: [
+      { label: "拔刀相助,正气凛然", risk: "中", outcomes: [
+        { w: 50, kind: "good", text: "你一声大喝,魔修被吓住了,趁着混乱你把女修拉走。女修脸颊绯红:“公子大恩,小女子无以为报……”你心里想:以身相许也不是不行。", fx: { favor: 30, exp: 600, charm: 1 } },
+        { w: 30, kind: "bad", text: "魔修们对视一眼,同时拔刀。你被追杀了三天三夜,最后躲在猪圈里才捡回一条命。", fx: { hp: -250, life: -2, charm: -1 } },
+        { w: 20, kind: "epic", text: "那三名魔修竟是女修的手下,这是她在测试你的人品!你通过考验,她表明身份——某隐世宗门的圣女。", fx: { favor: 50, item: "P09" } }
+      ]},
+      { label: "假装没看见,继续啃饼", risk: "低", outcomes: [
+        { w: 80, kind: "bad", text: "你啃着饼走了,身后传来女修的叹息。后来你听说她被另一位路人救了,并嫁给了他。你啃着饼,眼泪流进了嘴里。", fx: { charm: -1 } },
+        { w: 20, kind: "good", text: "你啃完饼后发现饼里夹着一张银票。大饼摊老板路过时对你眨了眨眼。", fx: { stone: 50 } }
+      ]},
+      { label: "【嘴遁大师】用三寸不烂之舌劝退魔修", risk: "中", need: "T_BARDHEART", outcomes: [
+        { w: 60, kind: "epic", text: "你一番口若悬河:“三位大哥,你们看看,这姑娘长得这么好看,抓回去也只是供你们的魔头享用,你们才分到几个子儿?不如跟我走,我给你们更好的价钱!”三名魔修热泪盈眶,当场拜你为大哥。", fx: { stone: 600, favor: 25, exp: 1500 } },
+        { w: 40, kind: "bad", text: "你的口才没起作用,三名魔修一起冲了上来,你被揍成了猪头。不过你的台词被女修记住了,她笑出了声。", fx: { hp: -200, favor: 10 } }
+      ]}
+    ]},
+  { id: "E04", title: "老爷爷夺舍",
+    text: "山洞深处,一位白发老者从你捡到的古戒中飘出,慈祥地看着你:“小友啊,老夫有一事相求。你看你骨骼清奇,将来必成大器,不如……让老夫在你体内小住几日?”你冷笑一声,握紧了拳头。",
+    choices: [
+      { label: "谨慎拒绝,把戒指扔了", risk: "低", outcomes: [
+        { w: 90, kind: "good", text: "你转身把戒指扔进了河里。老爷爷的哭喊声顺流而下,直到被一条鲤鱼吞进肚子里。", fx: { exp: 100 } },
+        { w: 10, kind: "bad", text: "你扔掉戒指后,老头附身在鲤鱼身上,发誓此生必报此仇!", fx: { enemy: { name: "老头鱼", power: 4 } } }
+      ]},
+      { label: "假装中招,反向压制老爷爷", risk: "高", outcomes: [
+        { w: 45, kind: "rare", text: "你的灵魂强度居然超过了老爷爷!他哭着喊:“小友饶命,老夫愿意传你三百年修为!”你满意地点点头:“成交。”", fx: { exp: 20000, life: 50, wit: 3 } },
+        { w: 35, kind: "bad", text: "你的灵魂比老爷爷弱了一截,被他轻轻松松占据了身体。你在意识深处无能狂怒,过了三年才夺回控制权。", fx: { life: -8, exp: -1000, wit: -2 } },
+        { w: 20, kind: "epic", text: "你和老爷爷两败俱伤,结果意外融合,获得了对方的全部记忆与功法。", fx: { exp: 15000, wit: 5, hp: -400 } }
+      ]},
+      { label: "【大孝子系统】认老爷爷当义父", risk: "中", need: "T_FATHER", outcomes: [
+        { w: 100, kind: "epic", text: "你一把抱住老爷爷的大腿,声泪俱下:“义父!孩儿找您找得好苦啊!”老爷爷愣住了,眼眶含泪:“孩子……”他把一半修为传给了你。三年后,他寿终正寝,留下一句:“孩子,别忘了你的仇人是谁。”", fx: { adopt: true, exp: 30000, stone: 1500, enemy: { name: "老爷爷的旧仇", power: 8 } } }
+      ]}
+    ]},
+  { id: "E05", title: "宗门大比·众目睽睽",
+    text: "三年一度的宗门大比开始了!擂台上,你抽到了一个让你抽筋的对手——正是那个用鼻孔看人的宗门首席弟子。他走上台,轻蔑地看着你:“你认输吧,我不想弄脏我的新剑。”台下观众议论纷纷。",
+    choices: [
+      { label: "全力以赴,拼死一战", risk: "高", outcomes: [
+        { w: 35, kind: "good", text: "你死死咬牙,一招得手,把首席弟子踢下擂台。全场安静了三秒,然后爆发出震天的欢呼!", fx: { exp: 4500, stone: 500, charm: 2, favor: 15 } },
+        { w: 40, kind: "bad", text: "你被打成了猪头,躺在担架上被抬了出去。首席弟子擦了擦剑:“我说过吧。”", fx: { hp: -300, charm: -2, exp: 300 } },
+        { w: 25, kind: "epic", text: "你在绝境中突破了一个小境界!首席弟子瞠目结舌,当场被你一掌拍飞。", fx: { breakthrough: true, exp: 2000 } }
+      ]},
+      { label: "投降认输,保命要紧", risk: "低", outcomes: [
+        { w: 70, kind: "bad", text: "你举手认输。首席弟子冷笑,台下传来嘘声:“怂货!”你默默下台,心里默念“忍一时风平浪静”。", fx: { charm: -1, exp: 100 } },
+        { w: 30, kind: "good", text: "你认输时语气十分诚恳,首席弟子被你说得有些愧疚,私下里塞给你一枚丹药。", fx: { item: "P01", favor: 5 } }
+      ]},
+      { label: "【被拒就变强】先去向他师妹表白,被拒后再上台", risk: "中", need: "T_REJECT", outcomes: [
+        { w: 100, kind: "epic", text: "你当众向首席弟子的师妹表白,被无情拒绝!你的修为轰然暴涨,战力翻倍!你拎着对方的领口说:“你……不配当我的对手。”一招把他扔下擂台。", fx: { exp: 12000, power: 0.1, charm: 3 } }
+      ]}
+    ]},
+  { id: "E06", title: "后宫修罗场",
+    text: "你刚回到洞府,发现三位女子同时坐在你的客厅里:一位冷着脸,一位含着泪,一位笑吟吟地拿着刀。她们同时转头看你:“你解释一下。”你的后背瞬间被汗水浸透。",
+    choices: [
+      { label: "一个个哄,先稳住局面", risk: "中", outcomes: [
+        { w: 40, kind: "good", text: "你用三寸不烂之舌,一人一句话,把她们都哄得服服帖帖。三位女子互相对视,默默放下了手里的武器。", fx: { favor: 15, charm: 2 } },
+        { w: 40, kind: "bad", text: "你顾此失彼,说错了话。三人同时拔刀,你被砍了七刀,倒在血泊中。", fx: { hp: -500, life: -5, favor: -20 } },
+        { w: 20, kind: "rare", text: "她们不知为何吵了起来,吵了三天三夜,最后结成了“反渣男联盟”,但依然留你吃饭。", fx: { favor: 5, stone: -50 } }
+      ]},
+      { label: "跳窗逃跑,三十六计走为上策", risk: "低", outcomes: [
+        { w: 60, kind: "bad", text: "你刚跳出窗口,一把飞刀擦着你的耳朵飞过。你头也不回地跑了,三个月不敢回家。", fx: { favor: -10, life: -1 } },
+        { w: 40, kind: "good", text: "你成功逃出,在路边摊吃了碗面。回家后发现三人已经互相和解,并且合伙开了家店。", fx: { stone: 200 } }
+      ]},
+      { label: "【后宫三千劫】全部收入麾下,雨露均沾", risk: "高", need: "T_HAREM", outcomes: [
+        { w: 55, kind: "epic", text: "你一声长啸:“都是我的人!”三位女子对视一眼,竟齐齐点头。你的战力暴涨,后宫上限突破天际!", fx: { power: 0.24, favor: 30, charm: 3 } },
+        { w: 45, kind: "bad", text: "三人联手把你揍成了猪头,洞府被拆了一半。你的修为损失了一半。", fx: { exp: -3000, hp: -400, stone: -300 } }
+      ]}
+    ]},
+  { id: "E07", title: "退婚流标准开局",
+    text: "宗门大殿上,曾经的未婚妻苏婉儿拿着婚书,冷冷地说:“你配不上我。”她身后,那位新晋的天骄公子正搂着她的腰。全场寂静,所有人都在等你的反应。",
+    choices: [
+      { label: "冷笑一声,撕了婚书,说“莫欺少年穷”", risk: "中", outcomes: [
+        { w: 50, kind: "epic", text: "你撕了婚书,冷冷地说:“三十年河东,三十年河西,莫欺少年穷。”你转身走出大殿,身后传来一片“哇”的声音,以及未婚妻轻轻的一声叹息。", fx: { exp: 3000, charm: 3, enemy: { name: "天骄公子", power: 5 } } },
+        { w: 50, kind: "bad", text: "你刚说完,天骄公子一巴掌把你扇飞了出去:“你也配说这话?”你嘴角流血,默默爬起来。", fx: { hp: -250, charm: -2 } }
+      ]},
+      { label: "跪下来求她别走", risk: "低", outcomes: [
+        { w: 85, kind: "bad", text: "你的下跪换来全场的嘲笑,未婚妻转身离开,留下一句:“废物。”", fx: { charm: -4, exp: 200 } },
+        { w: 15, kind: "rare", text: "你的下跪竟让未婚妻心中动摇,她偷偷塞给你一块灵玉:“你别想太多,我只是……可怜你。”", fx: { stone: 80, favor: 15 } }
+      ]},
+      { label: "【被拒就变强】自带被拒体质,默默蓄力", risk: "低", need: "T_REJECT", outcomes: [
+        { w: 100, kind: "epic", text: "婚书被撕的那一刻,你的修为如火山喷发!一股狂暴的灵力席卷全场,所有人都被你的气势压得无法动弹。你冷冷地说:“这个婚,我也不稀罕。”", fx: { exp: 20000, power: 0.15, charm: 4 } }
+      ]}
+    ]},
+  { id: "E08", title: "合欢宗圣女的邀请",
+    text: "夜深人静,一阵异香飘来,合欢宗圣女媚红袖斜靠在你的窗边,指尖缠着一缕红丝:“小弟弟,听说你修为卡在瓶颈很久了?姐姐这里有一门功法,双修可破境哦~”月色下,她的笑意更深了。",
+    choices: [
+      { label: "接受邀请,共修大道", risk: "高", outcomes: [
+        { w: 40, kind: "epic", text: "一夜双修,你修为暴涨,连破两境!圣女拢了拢发丝:“小弟弟,你这身子骨还不错……要不要继续?”", fx: { exp: 15000, breakthrough: true, favor: 30 } },
+        { w: 35, kind: "bad", text: "你被圣女吸干了三成修为,醒来时发现她已离去,只留下一张纸条:“谢谢款待,下次再来。”你的腰疼了三天。", fx: { exp: -3500, life: -5, hp: -400 } },
+        { w: 25, kind: "rare", text: "你们互相吸取对方的修为,最终平分秋色,圣女惊讶地看着你:“你是第一个让我失手的男人。”", fx: { exp: 6000, favor: 40, charm: 2 } }
+      ]},
+      { label: "义正辞严地拒绝", risk: "低", outcomes: [
+        { w: 70, kind: "good", text: "你一本正经地背诵了清心咒。圣女愣了愣,随即笑得花枝乱颤:“有意思,下次再来找你。”", fx: { wit: 1, favor: 10 } },
+        { w: 30, kind: "bad", text: "圣女冷哼一声,在你的茶杯里下了药。你睡了三天三夜,醒来发现钱袋空了。", fx: { stone: -120, life: -1 } }
+      ]},
+      { label: "【被拒就变强】主动求双修,被她当面拒绝", risk: "中", need: "T_REJECT", outcomes: [
+        { w: 100, kind: "epic", text: "你主动开口求双修,圣女笑着摇头:“你还不够格。”你的修为当场暴涨三成!圣女瞪大了眼睛:“你这是什么体质?”你一脸平静:“被拒体质。”", fx: { exp: 18000, power: 0.1, favor: 20 } }
+      ]}
+    ]},
+  { id: "E09", title: "妖族女帝追夫",
+    text: "天空一声龙吟,一只九尾巨狐遮天蔽日地降临在你面前,化作一袭红衣的绝色女子。她挑着眼角,淡淡地说:“孤的驸马,你还想逃到哪里去?”整个城池的人都跪下了,只有你一个人站着,双腿发软。",
+    choices: [
+      { label: "乖乖跟她回去", risk: "中", outcomes: [
+        { w: 50, kind: "epic", text: "你顺从地跟她走了。妖族女帝满意地点头:“很好。以后你就是孤的驸马,妖族的资源任你取用。”你的修为暴涨,但每天都要被她逼着喝补药。", fx: { exp: 20000, stone: 3000, favor: 40, life: 50 } },
+        { w: 50, kind: "bad", text: "回去后你被关进了后宫,每天被一百位妖族美女围观。你发现自己的自由被限制了,但……待遇确实好。", fx: { exp: 5000, favor: 20, life: -3 } }
+      ]},
+      { label: "拼死反抗,逃往天涯", risk: "高", outcomes: [
+        { w: 25, kind: "rare", text: "你借助一个传送阵逃走了,女帝在原地发出惊天动地的怒吼:“你给孤等着!”", fx: { exp: 2000, enemy: { name: "九幽玄凰", power: 14 } } },
+        { w: 75, kind: "bad", text: "你被一爪子拍进了地里,爬出来时满脸是土:“好吧,我跟你走。”", fx: { hp: -600, life: -5 } }
+      ]},
+      { label: "【嘴遁大师】反向说服女帝,让她放弃联姻", risk: "高", need: "T_BARDHEART", outcomes: [
+        { w: 40, kind: "epic", text: "你一番话说得女帝心服口服,她竟然红着脸说:“孤……孤也不是非要你不可……但你要是愿意的话……”", fx: { favor: 60, exp: 8000, stone: 2000 } },
+        { w: 60, kind: "bad", text: "女帝听完你的话,平静地说:“说完了?”然后一巴掌把你拍飞了十万里。", fx: { hp: -500, life: -6 } }
+      ]}
+    ]},
+  { id: "E10", title: "赤练仙子的毒药生意",
+    text: "魔宗毒姬赤练仙子在街边摆摊卖毒药,摊子上摆着五颜六色的小瓶子,每瓶标价都不低。她斜眼看着你:“小哥,买不买?买了保证你毒死仇人,也保证你自己不被毒死(大概)。”",
+    choices: [
+      { label: "买一瓶毒药防身", risk: "中", outcomes: [
+        { w: 55, kind: "good", text: "你买了一瓶“百日断肠散”,后来真的用来毒倒了仇人。赤练仙子眨眨眼:“回头客,下次给你打折。”", fx: { stone: -200, exp: 1500, favor: 10 } },
+        { w: 45, kind: "bad", text: "你买的毒药是假货,喝下去后你拉了三天肚子。赤练仙子笑着说:“这是体验装。”", fx: { stone: -200, hp: -300, life: -1 } }
+      ]},
+      { label: "和她讨价还价", risk: "中", outcomes: [
+        { w: 50, kind: "good", text: "你的砍价功夫让赤练仙子大开眼界:“你这人有点意思。”她半价卖你一瓶,并送了一张联系符。", fx: { stone: -80, favor: 20, item: "P08" } },
+        { w: 50, kind: "bad", text: "你砍价砍得太狠,赤练仙子冷着脸:“再砍,我就把你砍了。”你灰溜溜地走了。", fx: { favor: -10 } }
+      ]},
+      { label: "【丹药当饭吃】直接把她所有毒药当零食吃了", risk: "高", need: "T_PILLGOD", outcomes: [
+        { w: 100, kind: "epic", text: "你把摊子上的毒药一瓶接一瓶地灌进嘴里,赤练仙子目瞪口呆。你吃完之后打了个嗝:“味道不错,再来一份。”你的体魄暴涨,获得【百毒不侵】。", fx: { body: 10, exp: 6000, favor: 30, stone: -400 } }
+      ]}
+    ]},
+  { id: "E11", title: "魔道老祖夺舍你的师弟",
+    text: "深夜,你的师弟突然双眼发红,桀桀怪笑:“哈哈哈,老夫三千年前被封印,今日终于重见天日!”他提着一把滴血的剑,朝你走来,背后是整个宗门被屠戮的惨状。",
+    choices: [
+      { label: "战斗到底", risk: "高", outcomes: [
+        { w: 30, kind: "good", text: "你拼尽全力,最终击败老祖,救下了师弟。师弟含泪抱住你:“师兄!”你拍了拍他的背:“没事,以后少吃点路边的东西。”", fx: { exp: 8000, favor: 20, charm: 2 } },
+        { w: 50, kind: "bad", text: "老祖的实力远超你的想象,你被打得吐血三升,宗门也被屠了一半。", fx: { hp: -800, life: -10, exp: -1500 } },
+        { w: 20, kind: "epic", text: "你激发了体内血脉,打出了惊天一击,老祖的神魂当场被击碎。", fx: { exp: 20000, power: 0.1 } }
+      ]},
+      { label: "认老祖当义父", risk: "中", need: "T_FATHER", outcomes: [
+        { w: 100, kind: "epic", text: "你噗通一声跪在地上:“义父!孩儿给您请安!”老祖愣住了,然后哈哈大笑:“好!好!老夫有儿子了!”他传给你一半修为。三年后,他在一次意外中暴毙。", fx: { adopt: true, exp: 40000, stone: 2000, enemy: { name: "老祖旧部", power: 9 } } }
+      ]},
+      { label: "转身逃跑", risk: "低", outcomes: [
+        { w: 60, kind: "bad", text: "你逃出了宗门,身后是惨叫声与大火。你余生都被愧疚折磨。", fx: { charm: -3, wit: -1 } },
+        { w: 40, kind: "good", text: "你逃出后找到了一位路过的高人,请他出手帮忙。高人轻描淡写地解决了老祖,并收你为徒。", fx: { exp: 5000, item: "P03" } }
+      ]}
+    ]},
+  { id: "E12", title: "洛水河神的捉弄",
+    text: "月圆之夜,你路过洛水,一道水柱突然冲天而起,洛神璃从水中缓缓浮现,捂着嘴笑道:“又来一个~本神的第七十八个洗礼对象,恭喜你!”下一秒,你已经被扔进了河里。",
+    choices: [
+      { label: "任她捉弄,看她想干什么", risk: "低", outcomes: [
+        { w: 60, kind: "good", text: "你被洗礼之后,发现自己的修为居然精进了不少。洛神璃眨眨眼:“看你这么配合,送你一份礼物。”", fx: { exp: 2500, favor: 15 } },
+        { w: 40, kind: "bad", text: "你在水里泡了三天三夜,感冒了。洛神璃一脸无辜:“我不知道你这么不耐泡。”", fx: { hp: -200, life: -1 } }
+      ]},
+      { label: "反过来捉弄她", risk: "中", outcomes: [
+        { w: 45, kind: "rare", text: "你反手把洛神璃推进了河里。她愣了半天,然后笑得前仰后合:“有趣!本神很喜欢你!”", fx: { favor: 40, exp: 3500, charm: 2 } },
+        { w: 55, kind: "bad", text: "洛神璃大怒,一道水龙卷把你卷上了天,你被甩进三千里外的荒野,走了一个月才回家。", fx: { hp: -300, life: -1 } }
+      ]},
+      { label: "【月抛型概念神】借助当前月份BUFF反杀", risk: "天机", need: "T_MOONGOD", outcomes: [
+        { w: 100, kind: "epic", text: "你本月的BUFF正好是“攻击×999”,你一指点出,洛神璃大惊失色:“你……你是哪个界的神?”你背着手淡淡地说:“月抛的。”", fx: { exp: 15000, favor: 30, power: 0.2 } }
+      ]}
+    ]},
+  { id: "E13", title: "正道女侠的路痴之旅",
+    text: "慕容雪衣拎着剑站在你面前,理直气壮地说:“我要去北边的魔窟除魔,你来带路。”你指着地图:“女侠,那是南边。”她看了看地图,又看了看你:“你确定?”她把地图倒过来,“哦,那就是北边了。”",
+    choices: [
+      { label: "陪她同行,当人肉导航", risk: "中", outcomes: [
+        { w: 55, kind: "good", text: "你带着路痴女侠到达魔窟,她一剑劈开大门,杀得魔窟人仰马翻。战后她夸你:“你这人不错。”", fx: { exp: 4500, favor: 25, stone: 500 } },
+        { w: 45, kind: "bad", text: "你带着女侠走了三天,发现还在原地打转。女侠很严肃地说:“这里的风水有问题,是鬼打墙。”你无语凝噎。", fx: { life: -2, stone: -50, favor: 5 } }
+      ]},
+      { label: "趁机拿走她的储物袋", risk: "高", outcomes: [
+        { w: 30, kind: "good", text: "你趁她睡着,顺走了储物袋,发现里面都是好东西!", fx: { stone: 2500, item: "P02", favor: -30 } },
+        { w: 70, kind: "bad", text: "你刚伸手,女侠睁开了眼睛:“你在干什么?”你被一脚踹出十里。", fx: { hp: -400, favor: -40, charm: -3 } }
+      ]},
+      { label: "【舔狗万倍返还】送她一瓶普通的灵泉水", risk: "天机", need: "T_LICKDOG", outcomes: [
+        { w: 100, kind: "epic", text: "你递给她一瓶清水:“女侠,渴了吧?”她感动得热泪盈眶,当场表示要报答你。系统:万倍返还触发!她把师门宝库的钥匙交到了你手中。", fx: { item: "P17", stone: 8000, favor: 40 } }
+      ]}
+    ]},
+  { id: "E14", title: "春风楼的秘密",
+    text: "春风楼里,头牌花想容在帘后抚琴,琴音婉转。你的目光却落在她的手腕上——那里有一道几乎看不清的淡色印记,竟是某大宗门的暗桩标志。她察觉到了你的目光,指尖微微一顿:“公子,听出了什么?”",
+    choices: [
+      { label: "装作什么都没看见,继续听曲", risk: "低", outcomes: [
+        { w: 70, kind: "good", text: "你点头称赞琴音绝妙。花想容眼中闪过一丝赞赏:“公子是知音人。”她送你一份情报。", fx: { exp: 800, favor: 15, stone: 150 } },
+        { w: 30, kind: "bad", text: "你表演得太过用力,反而引起她的怀疑。当晚,你的房间进了贼。", fx: { stone: -100, favor: -5 } }
+      ]},
+      { label: "直接点破她的身份", risk: "高", outcomes: [
+        { w: 40, kind: "rare", text: "花想容沉默片刻,轻笑道:“有意思,你是第一个看穿我的人。”她与你结成同盟,共享情报。", fx: { favor: 35, exp: 4000, stone: 800 } },
+        { w: 60, kind: "bad", text: "你刚说完,春风楼四周涌出数十名护卫:“这位客官,您知道得太多了。”你被追杀了半个月。", fx: { hp: -400, life: -3, enemy: { name: "春风楼暗卫", power: 5 } } }
+      ]},
+      { label: "【舔狗万倍返还】点她的牌,送她一支簪子", risk: "天机", need: "T_LICKDOG", outcomes: [
+        { w: 100, kind: "epic", text: "你送出一支普通银簪,花想容眼眶微红:“公子这份心意,妾身记下了。”她当夜送来一整座宗门的情报网,并附上一枚神级功法。", fx: { item: "P17", stone: 12000, favor: 55 } }
+      ]}
+    ]},
+  { id: "E15", title: "病娇师妹的爱心汤",
+    text: "师妹白若雪端着一碗热气腾腾的汤,笑盈盈地站在你的门外:“师兄,我给你熬了汤,趁热喝吧。”你闻了闻,汤里似乎有一丝奇怪的香气。她歪着头,眼睛眯成一条线:“你不喝吗?”",
+    choices: [
+      { label: "一口气喝光", risk: "高", outcomes: [
+        { w: 40, kind: "good", text: "汤里加了培元药材,你神清气爽,修为精进。白若雪捂着脸:“师兄喜欢就好~”", fx: { exp: 3500, favor: 25, hp: 400 } },
+        { w: 35, kind: "bad", text: "汤里加了迷魂散,你睡了三天三夜,醒来发现自己被锁在她的密室里,四周全是你的画像。", fx: { life: -2, favor: 15, charm: -1 } },
+        { w: 25, kind: "epic", text: "汤里居然有她的心头血,服下后你的修为暴涨,但与她结下了生死契约。", fx: { exp: 15000, favor: 60, life: 30 } }
+      ]},
+      { label: "委婉拒绝,说自己吃过了", risk: "中", outcomes: [
+        { w: 55, kind: "bad", text: "白若雪沉默了三息,笑容依旧:“好,下次再给师兄做。”你背后冒出冷汗,总觉得她刚才的眼神不太对劲。", fx: { favor: -5 } },
+        { w: 45, kind: "good", text: "白若雪温柔地点头,把汤端了回去,并留下一句:“师兄要注意身体哦~”", fx: { favor: 10 } }
+      ]},
+      { label: "反手喂她喝", risk: "中", outcomes: [
+        { w: 50, kind: "rare", text: "你舀起一勺汤递到她嘴边:“你先尝尝。”白若雪的脸瞬间通红,低头喝下:“师兄……你欺负人。”", fx: { favor: 45, charm: 2, exp: 800 } },
+        { w: 50, kind: "bad", text: "白若雪盯着你,轻轻地问:“你怀疑我?”她放下碗,拔出匕首……你的人生最后一个念头是:“我就不该多想。”", fx: { hp: -700, life: -8, favor: -20 } }
+      ]}
+    ]},
+  { id: "E16", title: "黑化师姐的邀请",
+    text: "一袭红衣的凤栖梧站在你面前,身后是一地尸体。她俯视着你,轻声说:“师弟,跟师姐走吧。这宗门背叛了我们,我要让他们付出代价。”她伸出手,指尖上还带着温热的血。",
+    choices: [
+      { label: "握住她的手,与她同行", risk: "高", outcomes: [
+        { w: 50, kind: "epic", text: "你握住她的手,凤栖梧眼角闪过一抹泪光:“师弟,谢谢你。”你们联手杀入宗门,一夜之间改写了整个宗门的格局。", fx: { exp: 12000, favor: 60, enemy: { name: "旧宗门残党", power: 7 }, stone: 2000 } },
+        { w: 50, kind: "bad", text: "你握住她的手后,才发现她的手是冰凉的——她已经被魔气吞噬了神志。你们的联手变成了一场灾难。", fx: { hp: -700, life: -10, exp: -2500, favor: 25 } }
+      ]},
+      { label: "劝她放下仇恨", risk: "中", outcomes: [
+        { w: 40, kind: "rare", text: "凤栖梧沉默良久,放下了手中的剑:“师弟……我累了。”她的魔气渐渐消散,恢复了温柔的模样。", fx: { favor: 45, wit: 2, exp: 2500 } },
+        { w: 60, kind: "bad", text: "凤栖梧冷笑:“你和他们一样!”一剑刺来,你勉强躲过,却被划伤了脸。", fx: { hp: -400, charm: -3, favor: -20 } }
+      ]},
+      { label: "【天煞孤星】接受她的好意,但你的命格克她", risk: "天机", need: "T_LONESTAR", outcomes: [
+        { w: 100, kind: "epic", text: "你握住她的手,凤栖梧在那一刻忽然停止了呼吸。她在你怀中倒下,嘴角带着微笑:“师弟,能死在你怀里,真好。”她的修为与遗产全部归你。你擦掉眼泪:“这是命。”", fx: { exp: 50000, stone: 20000, life: 100, charm: -4 } }
+      ]}
+    ]},
+  { id: "E17", title: "古灵儿的易容恶作剧",
+    text: "你回到洞府,发现“你自己”正坐在桌边吃你的灵果。那个“你”冲你招招手:“来,一起吃!”你仔细一看,发现他的手上少了你那颗标志性的痣。古灵儿!她又来了。",
+    choices: [
+      { label: "将计就计,反过来整她", risk: "低", outcomes: [
+        { w: 70, kind: "good", text: "你也易容成古灵儿的样子,冲进她的房间对着她的师父大喊:“师父我错了!”古灵儿被她师父追着打了一整夜。", fx: { favor: 20, charm: 1, exp: 500 } },
+        { w: 30, kind: "bad", text: "你的易容不到位,被她师父一巴掌拍成了猪头。", fx: { hp: -150, charm: -1 } }
+      ]},
+      { label: "直接戳穿她,看她怎么办", risk: "低", outcomes: [
+        { w: 60, kind: "good", text: "古灵儿吐吐舌头,变回原来的样子:“被你发现了~”她送你一瓶自己炼的小丹药,算是赔罪。", fx: { item: "P01", favor: 15 } },
+        { w: 40, kind: "bad", text: "古灵儿恼羞成怒,在你茶里放了泻药。你上了三天厕所。", fx: { hp: -150, life: -1, favor: 5 } }
+      ]},
+      { label: "【拷贝忍者】趁机复制她的易容术", risk: "低", need: "T_COPYCAT", outcomes: [
+        { w: 100, kind: "epic", text: "你一边装作被骗,一边偷偷观察她的法诀。数息之后,你已学会了易容术,并回敬了她一个“你自己”。古灵儿目瞪口呆:“你……你是怎么学会的?”", fx: { wit: 3, exp: 3500, favor: 25 } }
+      ]}
+    ]},
+  { id: "E18", title: "气运之子的打脸日常",
+    text: "你的死对头——气运之子叶天,又来找你麻烦了。他得意洋洋地摇着扇子:“废物,你知道我这次得到了什么机缘吗?”他背后站着三位绝色美女,眼睛里全是崇拜。你叹了口气,又来了。",
+    choices: [
+      { label: "硬碰硬,看谁的主角光环更强", risk: "高", outcomes: [
+        { w: 25, kind: "epic", text: "你激活自己的气运,与叶天正面对决。双方光环冲突,天地变色,最后你险胜一招!叶天吐血倒地:“不可能……我是主角!”", fx: { exp: 10000, luck: 5, power: 0.1 } },
+        { w: 55, kind: "bad", text: "叶天的光环强得离谱,他随口说了句“这是我的机缘”,天道就帮他把你踹飞了。", fx: { hp: -600, luck: -3, charm: -2 } },
+        { w: 20, kind: "good", text: "你们两败俱伤,各自躺在地上喘气。三位美女同时转头看你,眼里冒光。", fx: { favor: 30, hp: -300 } }
+      ]},
+      { label: "认怂,先避其锋芒", risk: "低", outcomes: [
+        { w: 70, kind: "bad", text: "你认怂的样子被叶天嘲笑了一整天,甚至传遍了整个修仙界。", fx: { charm: -2, luck: -1 } },
+        { w: 30, kind: "good", text: "你认怂后,叶天得意忘形,当场露出了一个破绽。你偷偷记下,为日后翻盘埋下伏笔。", fx: { wit: 2 } }
+      ]},
+      { label: "【大孝子系统】认叶天当义父", risk: "中", need: "T_FATHER", outcomes: [
+        { w: 100, kind: "epic", text: "你深吸一口气,噗通跪下:“义父在上,请受孩儿一拜!”叶天呆住了,三位美女也呆住了。你顺势复制了他一半的修为和气运。三年后,叶天会“意外暴毙”……", fx: { adopt: true, exp: 35000, luck: 10, stone: 5000, enemy: { name: "叶天的守护者", power: 11 } } }
+      ]}
+    ]},
+  { id: "E19", title: "天劫降临·渡劫现场",
+    text: "天色骤变,九重劫云在你头顶翻滚,雷光四射。你身后站着一群围观的吃瓜群众,有人在押注“他会不会被劈成焦炭”,有人在偷偷录像。天地之间一片肃杀。",
+    choices: [
+      { label: "硬抗天雷,不用任何外物", risk: "高", outcomes: [
+        { w: 40, kind: "epic", text: "九道天雷落下,你硬生生扛了下来,浑身冒烟,但气息更加凝实。你冷笑:“就这?”云层里传来天道的低语:“再来一道。”", fx: { breakthrough: true, exp: 20000, life: 100, body: 5 } },
+        { w: 60, kind: "bad", text: "第七道天雷落下,你被劈得外焦里嫩,一缕青烟飘上天。围观群众鼓掌:“好死!”", fx: { die: true } }
+      ]},
+      { label: "使用渡劫护身符", risk: "低", outcomes: [
+        { w: 75, kind: "good", text: "护身符闪烁金光,替你挡下致命一击。你有惊无险渡过天劫。", fx: { breakthrough: true, exp: 12000, life: 60 } },
+        { w: 25, kind: "bad", text: "护身符抵挡了两道,第三道直接把符劈碎了。你吐了口血,勉强支撑过去。", fx: { hp: -800, life: -10, exp: 5000 } }
+      ]},
+      { label: "【十里坡血牛】血池无限,用血肉硬扛", risk: "中", need: "T_BLOODCOW", outcomes: [
+        { w: 100, kind: "epic", text: "你的血池深不见底,天雷劈在身上就像挠痒痒。你一边啃着烧饼一边渡劫,天雷劈得越来越没脾气。最后天道默默收回劫云:“你赢了。”", fx: { breakthrough: true, exp: 50000, hp: 30000, life: 200 } }
+      ]}
+    ]},
+  { id: "E20", title: "高冷师尊的考验",
+    text: "月清寒站在雪峰之巅,白衣胜雪,冷冷地看着你:“徒儿,你的修为停滞不前,可知为何?”你低头不语。她淡淡地说:“因为你心中有杂念。”她转身,留下一道背影:“今夜子时,到后山来。”",
+    choices: [
+      { label: "老老实实去后山受训", risk: "中", outcomes: [
+        { w: 55, kind: "good", text: "后山之上,月清寒亲自指点你修行。她的话语依然冰冷,但每一句都切中要害。你的修为突飞猛进。", fx: { exp: 8000, favor: 25, wit: 3 } },
+        { w: 45, kind: "bad", text: "你被师尊罚站一夜,冻成了冰雕,第二天才被化开。", fx: { hp: -300, life: -2, favor: 10 } }
+      ]},
+      { label: "半夜翻墙去偷看师尊洗澡", risk: "高", outcomes: [
+        { w: 20, kind: "rare", text: "你看到月清寒坐在冰泉中,冷淡的脸上带着一丝疲惫。她察觉到你的目光,淡淡地说:“看够了没有?”你转身狂奔。", fx: { favor: 15, charm: 1, exp: 1000 } },
+        { w: 80, kind: "bad", text: "师尊一剑把你钉在了墙上,冷冷地说:“你明天去面壁一年。”", fx: { hp: -500, life: -5, favor: -40 } }
+      ]},
+      { label: "【多子多福】向师尊表明心意,请她成为道侣", risk: "天机", need: "T_MULTICHILD", outcomes: [
+        { w: 40, kind: "epic", text: "月清寒的手微微颤抖,良久,她轻声说:“……好。”那一夜,雪峰之巅冰雪消融,春意盎然。九个月后,一个先天道体的孩子降生,天降功德金光!", fx: { child: true, exp: 60000, life: 50, favor: 80 } },
+        { w: 60, kind: "bad", text: "月清寒一掌拍在你头上:“逆徒!”你飞出去三千里,在雪地里躺了三天。", fx: { hp: -600, life: -3, favor: -30 } }
+      ]}
+    ]},
+  { id: "E21", title: "宿敌墨无痕的挑战书",
+    text: "天骄榜第一的墨无痕给你下了一份战书,上书:“蝼蚁,三日后,山顶一战。若你不来,便是懦夫。”落款处还画了一个自认潇洒的剑花。你看着战书,嘴角抽了抽:这位大哥真的有点中二。",
+    choices: [
+      { label: "应战,让他见识一下什么叫“蝼蚁”", risk: "高", outcomes: [
+        { w: 35, kind: "epic", text: "你一招击败墨无痕,他倒在地上喃喃自语:“怎么可能……我是天骄榜第一……”你拍拍灰尘,留下一句:“榜单该换了。”", fx: { exp: 15000, charm: 3, power: 0.1 } },
+        { w: 55, kind: "bad", text: "墨无痕的剑法确实厉害,你被打得满地找牙。他收剑,淡淡地说:“蝼蚁。”", fx: { hp: -700, charm: -3, exp: 1000 } },
+        { w: 10, kind: "good", text: "你们打了三天三夜,最终平手。两人躺在山顶上互相看着对方:“你小子,还行。”", fx: { exp: 7000, favor: 20 } }
+      ]},
+      { label: "不理他,当没看见", risk: "低", outcomes: [
+        { w: 60, kind: "bad", text: "墨无痕见你没来,到处宣扬你是懦夫,全城的人都在笑话你。", fx: { charm: -3 } },
+        { w: 40, kind: "good", text: "你的无视激怒了墨无痕,他在山顶等了三天三夜,最后被雨淋成了落汤鸡。", fx: { charm: 1 } }
+      ]},
+      { label: "【沙雕之王】用沙雕方式应战", risk: "天机", need: "T_MEME", outcomes: [
+        { w: 100, kind: "epic", text: "你带着一个大喇叭和一只鸭子去赴约。墨无痕刚摆好pose,你就开始循环播放《大风车》。他被魔性旋律洗脑,精神崩溃,当场认输。你捡到了他的剑,并附赠一只鸭子。", fx: { exp: 12000, stone: 3000, charm: 4 } }
+      ]}
+    ]},
+  { id: "E22", title: "戒指老爷爷的传功",
+    text: "你的戒指里的老爷爷突然发话:“小友,老夫要传你一门绝世功法。不过有个条件——你每天要给老夫讲一个笑话。”你想了想,开口:“从前有座山,山里有座庙……”老爷爷笑得老泪纵横。",
+    choices: [
+      { label: "给老爷爷讲三个冷笑话", risk: "低", outcomes: [
+        { w: 70, kind: "good", text: "老爷爷被你的冷笑话冻得瑟瑟发抖,却觉得有趣,传你一门功法。", fx: { exp: 4500, wit: 2 } },
+        { w: 30, kind: "bad", text: "老爷爷冷得睡着了,三个月没醒。", fx: { exp: 0 } }
+      ]},
+      { label: "要求老爷爷直接传授全部修为", risk: "中", outcomes: [
+        { w: 40, kind: "rare", text: "老爷爷叹息一声:“年轻人,不要太贪心。”他传你一半功力,留一半自己用。", fx: { exp: 18000, wit: 3 } },
+        { w: 60, kind: "bad", text: "老爷爷不满地哼了一声:“贪心不足蛇吞象。”他把戒指封了起来,你一个月内用不了里面的东西。", fx: { stone: -100 } }
+      ]},
+      { label: "【月抛型概念神】借用当月BUFF,让他无条件传功", risk: "天机", need: "T_MOONGOD", outcomes: [
+        { w: 100, kind: "epic", text: "你本月的BUFF是“必捡仙器”,老爷爷戒指里居然藏着一整套仙器!他哭着说:“小友,你……你这是抢劫!”", fx: { item: "P07", exp: 20000, stone: 5000 } }
+      ]}
+    ]},
+  { id: "E23", title: "魔宗毒姬的招揽",
+    text: "赤练仙子一身黑纱,斜靠在你的床边,指尖缠着一条小蛇:“小哥,我魔宗最近缺人手,你这身板不错,要不要来当护法?待遇么……管饭,管住,偶尔管杀。”她笑得人畜无害。",
+    choices: [
+      { label: "加入魔宗,走邪修之路", risk: "高", outcomes: [
+        { w: 45, kind: "epic", text: "你成为魔宗护法,修行速度突飞猛进。虽然身边的邪修都不太友善,但待遇确实不错。", fx: { exp: 14000, stone: 3000, charm: -3, favor: 20 } },
+        { w: 55, kind: "bad", text: "你加入魔宗后发现,这里的人每天互相下毒,你喝了三个月的解药才保住小命。", fx: { life: -8, hp: -500, exp: 3500 } }
+      ]},
+      { label: "婉拒,但留下联系方式", risk: "低", outcomes: [
+        { w: 80, kind: "good", text: "赤练仙子挑眉:“有意思,我等你改主意。”她在你桌上留下一瓶毒药当见面礼。", fx: { favor: 10, item: "P08" } },
+        { w: 20, kind: "bad", text: "赤练仙子冷笑,第二天你的饭菜里多了点“料”。", fx: { hp: -200 } }
+      ]},
+      { label: "【吞天魔功(残)】反过来吞噬她的毒功", risk: "高", need: "T_DEVOUR", outcomes: [
+        { w: 55, kind: "epic", text: "你运起吞天魔功,赤练仙子的毒功被你吸入体内。她震惊地后退:“你……你是什么怪物?”你冷笑一声,眼中血光闪烁。", fx: { exp: 25000, body: 5, favor: -10, enemy: { name: "赤练仙子", power: 10 } } },
+        { w: 45, kind: "bad", text: "她的毒功太过霸道,你吞下后差点走火入魔,吐了三天的黑血。", fx: { hp: -900, life: -10, exp: 8000 } }
+      ]}
+    ]},
+  { id: "E24", title: "神秘老乞丐的馈赠",
+    text: "路边一位邋遢的老乞丐朝你伸出一只手:“小友,给口饭吃吧。”你看着他脏兮兮的脸,眼中却有一缕极深的光。你心里想:这不会就是传说中的“隐世大能”吧?",
+    choices: [
+      { label: "给他一碗饭", risk: "低", outcomes: [
+        { w: 60, kind: "rare", text: "老乞丐吃完饭,抹了抹嘴:“年轻人,不错。老夫送你一场造化。”他一指点在你眉心,你的修为暴涨。", fx: { exp: 10000, luck: 5, life: 30 } },
+        { w: 40, kind: "good", text: "老乞丐吃完饭,拍拍屁股走了,留下一句:“有缘再见。”你觉得自己心情很好。", fx: { luck: 1, charm: 1 } }
+      ]},
+      { label: "无视他,继续赶路", risk: "低", outcomes: [
+        { w: 80, kind: "bad", text: "老乞丐在你身后叹了口气,淡淡地说:“可惜了。”你不知道自己刚刚错过了什么。", fx: { luck: -2 } },
+        { w: 20, kind: "good", text: "你走了几步,发现自己的钱袋里多了一块灵石。回头一看,老乞丐不见了。", fx: { stone: 30 } }
+      ]},
+      { label: "【舔狗万倍返还】把全部灵石送给老乞丐", risk: "天机", need: "T_LICKDOG", outcomes: [
+        { w: 100, kind: "epic", text: "你把钱袋整个递过去:“老人家,拿着。”老乞丐愣了半天,最终长叹一声:“好孩子……”他现出真身——一位飞升失败的上古大能!万倍返还触发!他把毕生传承倒进了你的脑子里。", fx: { item: "P16", exp: 80000, stone: 30000, wit: 8 } }
+      ]}
+    ]}
+];
+
+// ====== 第一部分结束,等待输出第二部分 ======
+/* ====================================================================
+   第二部分:引擎工具 + App 状态与玩法逻辑
+   设计:整个游戏状态是一个可 JSON 序列化的对象 g;
+   每次行动 = 深拷贝 g -> 修改 -> settle 结算死亡 -> 提交并自动存档。
+   ==================================================================== */
+const SAVE_KEY = "zhutian_lunhui_save_v2";
+const MANUAL_KEY = "zhutian_lunhui_manual_v2";
+const SAVE_VER = 2;
+const ASCEND_NEED = 500000000;   // 渡劫期飞升所需修为
+const WIFE_LIMIT = 3;            // 非【后宫三千劫】道侣上限
+const STAT_KEYS = ["body", "wit", "luck", "charm"];
+const STAT_NAMES = { body: "体魄", wit: "悟性", luck: "气运", charm: "魅力" };
+const START_AGE = { I03: 3200, I05: 10000, I11: 120 };
+const INIT_REALM = { I03: 11, I05: 9, I07: 0, I09: 3, I11: 4, I12: 6, I14: 2, I16: 1 };
+
+const MOON_BUFFS = {
+  atk999:        { name: "攻击×999",     desc: "战力×999" },
+  break100:      { name: "突破率100%",   desc: "下次突破必定成功" },
+  must_treasure: { name: "必捡仙器",     desc: "历练必捡仙器,事件成功率+10%" },
+  stone_x10:     { name: "灵石×10",      desc: "所有灵石收益×10" },
+  immune_all:    { name: "百毒不侵·万法不沾", desc: "免疫一切伤害" },
+  exp_x5:        { name: "修为×5",       desc: "所有修为收益×5" },
+  charm_max:     { name: "魅力拉满",     desc: "好感收益×2" }
+};
+
+const SURNAMES = ["叶", "萧", "林", "楚", "陈", "秦", "李", "夜", "顾", "沈", "洛", "龙", "韩", "魏", "苏"];
+const GIVEN = ["天", "凡", "尘", "玄", "辰", "逸", "霄", "战", "无", "极", "云", "弃", "傲", "寒", "霸", "枫", "安", "一"];
+const CHILD_GIVEN = ["小宝", "天命", "无敌", "逆天", "傲世", "凌霄", "不凡", "阿花", "狗蛋", "霸霸", "混元", "鸿蒙", "小尾巴", "二狗"];
+
+/* 小型随机遭遇:历练时 18% 概率触发,数值随境界缩放 */
+const MINOR_EVENTS = [
+  { t: "你在溪边洗脚,摸到一块会发光的石头,是灵石!", k: "good", stone: 60, expF: 0.02 },
+  { t: "你喂了一只受伤的灵兔,它含泪跑了,留下一株灵草。", k: "good", expF: 0.06 },
+  { t: "一只野猪精拦路,把你拱进了泥坑。", k: "bad", hp: -150 },
+  { t: "野外遇到同阶散修切磋,你险胜一招,对方抱拳:“后会有期。”", k: "good", expF: 0.08, charm: 1 },
+  { t: "误入一片瘴气林,吸了两口,头晕眼花地爬了出来。", k: "bad", hp: -200, expF: 0.01 },
+  { t: "你捡到一本《从入门到入土》,翻了翻居然有点道理。", k: "rare", wit: 1, expF: 0.05 },
+  { t: "路边老道士硬要给你算命,说你有血光之灾,然后你真的摔了一跤。", k: "bad", stone: -30, hp: -100 },
+  { t: "一只路过的仙鹤嫌你挡路,啄了你一口,顺便掉下一枚丹药。", k: "rare", item: "P01" }
+];
+
+/* ---------------- 基础工具 ---------------- */
+const rnd = (a, b) => Math.random() * (b - a) + a;
+const rint = (a, b) => Math.floor(rnd(a, b + 1));
+const chance = p => Math.random() < p;
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function wpick(list, wf) {
+  wf = wf || (x => x.w);
+  const tot = list.reduce((s, x) => s + wf(x), 0);
+  let r = Math.random() * tot;
+  for (const x of list) { r -= wf(x); if (r <= 0) return x; }
+  return list[list.length - 1];
+}
+const cloneG = o => JSON.parse(JSON.stringify(o));
+const fmt = n => {
+  n = Math.round(n);
+  const a = Math.abs(n);
+  if (a >= 1e8) return (n / 1e8).toFixed(2) + "亿";
+  if (a >= 1e4) return (n / 1e4).toFixed(1) + "万";
+  return String(n);
+};
+const T_BY_ID = Object.fromEntries(TALENTS.map(t => [t.id, t]));
+const ITEM_BY_ID = Object.fromEntries(ITEMS.map(t => [t.id, t]));
+const NPC_BY_ID = Object.fromEntries(NPCS.map(t => [t.id, t]));
+const IDN_BY_ID = Object.fromEntries(IDENTITIES.map(t => [t.id, t]));
+const EVENT_BY_ID = Object.fromEntries(EVENTS.map(t => [t.id, t]));
+const ROOT_BY_ID = Object.fromEntries(CHILD_ROOTS.map(t => [t.id, t]));
+const hasT = (g, id) => g.talents.indexOf(id) >= 0;
+const randName = () => pick(SURNAMES) + pick(GIVEN) + (chance(0.5) ? pick(GIVEN) : "");
+
+/* ---------------- 状态构造 ---------------- */
+function rollPool(exclude) {
+  const out = [];
+  const ids = new Set(exclude || []);
+  while (out.length < 10) {
+    const grade = wpick([{ g: "彩", w: 7 }, { g: "金", w: 25 }, { g: "紫", w: 33 }, { g: "黑", w: 35 }]).g;
+    const cands = TALENTS.filter(t => t.grade === grade && !ids.has(t.id));
+    if (!cands.length) continue;
+    const t = pick(cands);
+    ids.add(t.id);
+    out.push(t.id);
+  }
+  return out;
+}
+function blankPlay() {
+  return {
+    identityId: null, name: "", age: 16, lifeMax: 80, realm: 0, exp: 0, hp: 100, hpBonus: 0, hpMax: 100,
+    stats: { body: 10, wit: 10, luck: 10, charm: 10 }, stone: 0, powerBonus: 0, breakBonus: 0, shield: 0,
+    childBoost: 0, guaranteeChild: false, talents: [], tstat: {}, logs: [], wives: [], children: [],
+    enemies: [], followers: 0, bag: {}, npc: {}, event: null, lastEvent: null, auto: false, actions: 0,
+    buff: null, streak: 0, demon: 0, hunted: false, fathers: [], drunk: 0, ntr: 0, grief: 0, seedTimer: 0,
+    rejectCount: 0, reviveLeft: { protag: 3, unlucky: 1 }, broadcast: null, result: null, kills: 0,
+    copied: 0, master: null, dying: null, feedTotal: 0
+  };
+}
+function freshGame(meta) {
+  meta = meta || { rounds: 0, best: 0, prevTalents: [], history: [] };
+  return Object.assign({ v: SAVE_VER, phase: "draw", meta: meta,
+    draw: { pool: rollPool([]), picks: [], keep: null, refresh: 0 } }, blankPlay());
+}
+function loadSave(key) {
+  try {
+    const raw = localStorage.getItem(key || SAVE_KEY);
+    if (!raw) return null;
+    const g = JSON.parse(raw);
+    if (!g || g.v !== SAVE_VER || !g.phase) return null;
+    g.auto = false;
+    if ((g.phase === "play" || g.phase === "end") && (typeof g.exp !== "number" || !isFinite(g.exp))) {
+      g.exp = g.realm >= 16 ? (typeof ASCEND_NEED !== "undefined" ? ASCEND_NEED : 500000000) : 0;
+    }
+    return g;
+  } catch (e) { return null; }
+}
+
+/* ---------------- 日志 / 统计 / 数值 ---------------- */
+function addLog(g, t, k) {
+  g.logs.push({ t: t, k: k || "info", y: Math.floor(g.age) });
+  if (g.logs.length > 300) g.logs.splice(0, g.logs.length - 300);
+}
+const trig = (g, id, n) => { g.tstat[id] = (g.tstat[id] || 0) + (n || 1); };
+const addItem = (g, id, n) => { g.bag[id] = (g.bag[id] || 0) + (n || 1); };
+function takeItem(g, id) {
+  if (!g.bag[id]) return false;
+  g.bag[id]--;
+  if (g.bag[id] <= 0) delete g.bag[id];
+  return true;
+}
+function hpMaxOf(g) {
+  const base = (100 + g.stats.body * 25) * (1 + g.realm * 0.6);
+  return Math.floor(base * (hasT(g, "T_WEAKBODY") ? 0.7 : 1)) + g.hpBonus;
+}
+const expNeed = g => (g.realm >= 16 ? ASCEND_NEED : REALMS[g.realm].need);
+function successBonus(g) {
+  return (hasT(g, "T_LUCKY") ? 0.25 : 0) - (hasT(g, "T_UNLUCKY") ? 0.2 : 0)
+    + g.stats.luck / 400 + (g.buff === "must_treasure" ? 0.1 : 0);
+}
+function calcPower(g) {
+  const s = g.stats;
+  const base = 30 + s.body * 4 + s.wit * 2 + s.luck + s.charm;
+  let m = 1 + g.powerBonus;
+  if (hasT(g, "T_HAREM")) m += g.wives.length * 0.08;
+  let p = base * REALMS[g.realm].mul * m;
+  if (g.drunk > 0 && hasT(g, "T_ALCOHOL")) p *= 3;
+  if (g.ntr > 0) p *= 5;
+  if (g.buff === "atk999") p *= 999;
+  return Math.floor(p);
+}
+const enemyPower = e => (60 + e.power * 8) * REALMS[clamp(e.power, 0, 16)].mul;
+function winRate(g, e) {
+  const pP = calcPower(g) + (hasT(g, "T_BLOODCOW") ? hpMaxOf(g) * 0.2 : 0);
+  const eP = enemyPower(e);
+  let p = pP / (pP + eP);
+  if (hasT(g, "T_SWORDBONE") && eP <= pP * 30) p += (1 - p) * 0.4;
+  p += successBonus(g) * 0.3;
+  return clamp(p, 0.01, 0.97);
+}
+function gainExp(g, v, mult) {
+  if (v > 0) {
+    let m = mult || 1;
+    if (g.buff === "exp_x5") m *= 5;
+    if (g.grief > 0) m *= 1.5;
+    v = v * m;
+  }
+  g.exp = Math.max(0, Math.floor(g.exp + v));
+  return Math.floor(v);
+}
+function addStone(g, v) {
+  if (v > 0 && g.buff === "stone_x10") v *= 10;
+  g.stone = Math.max(0, Math.floor(g.stone + v));
+  return Math.floor(v);
+}
+/* 按气血上限比例受伤;floorOne=true 时最多打到 1 点血(事件伤害不直接致死) */
+function hurt(g, frac, floorOne, battle) {
+  if (g.buff === "immune_all") return 0;
+  let d = Math.floor(hpMaxOf(g) * frac * (battle && hasT(g, "T_WEAKBODY") ? 1.3 : 1));
+  if (floorOne) d = Math.min(d, Math.max(0, Math.floor(g.hp) - 1));
+  g.hp -= d;
+  return d;
+}
+function setFavor(g, id, d) {
+  const s = g.npc[id];
+  if (!s) return 0;
+  s.favor = clamp(s.favor + d, -100, 100);
+  return s.favor;
+}
+
+/* ---------------- 仇人 / 道侣 ---------------- */
+function makeEnemy(name, power, extra) {
+  power = clamp(Math.floor(power), 0, 16);
+  const npc = NPCS.find(n => n.name === name);
+  return Object.assign({
+    id: "e" + Date.now() + rint(100, 999), name: name, power: power,
+    stone: Math.floor(60 * Math.pow(power + 1, 2.2)),
+    exp: Math.floor(REALMS[power].need * 0.5),
+    npcId: npc ? npc.id : null,
+    female: npc ? npc.id !== "N13" : false
+  }, extra || {});
+}
+function addEnemy(g, spec) {
+  if (g.wives.some(w => NPC_BY_ID[w.id] && NPC_BY_ID[w.id].name === spec.name)) return;
+  if (g.enemies.some(e => e.name === spec.name)) return;
+  g.enemies.push(makeEnemy(spec.name, spec.power));
+}
+function removeWife(g, id) { g.wives = g.wives.filter(w => w.id !== id); }
+function killNpc(g, id) {
+  g.npc[id].alive = false;
+  removeWife(g, id);
+}
+function addWife(g, id, force) {
+  if (g.wives.some(w => w.id === id)) return true;
+  const harem = hasT(g, "T_HAREM");
+  if (!force && !harem && g.wives.length >= WIFE_LIMIT) return false;
+  const n = NPC_BY_ID[id];
+  const old = g.wives.length;
+  g.wives.push({ id: id, name: n.name, since: Math.floor(g.age), kids: 0 });
+  g.npc[id].favor = Math.max(g.npc[id].favor, 50);
+  g.enemies = g.enemies.filter(e => e.npcId !== id);
+  addLog(g, "「" + n.name + "」(" + n.title + ")正式成为你的道侣!", "rare");
+  if (harem && old > 0) {
+    trig(g, "T_HAREM");
+    let fights = 0;
+    g.wives.forEach(w => { if (w.id !== id && chance(0.3)) { fights++; setFavor(g, w.id, -10); } });
+    if (fights) {
+      const loss = Math.floor(g.exp * 0.25); // 数据里 lossPct=0.5,此处折半以免一局被打穿
+      g.exp -= loss;
+      addLog(g, "【后宫三千劫】修罗场爆发!" + fights + "位旧道侣大打出手,你被殃及,损失修为" + fmt(loss) + "。", "bad");
+    }
+  }
+  return true;
+}
+function stealWife(g, id) {
+  const n = NPC_BY_ID[id];
+  g.npc[id].stolen = true;
+  removeWife(g, id);
+  const loss = Math.floor(g.exp * 0.1);
+  g.exp -= loss;
+  g.grief = 5;
+  addLog(g, "「" + n.name + "」被别人抢走了!心境崩塌,修为-" + fmt(loss) + "。但悲愤出强者:5年内修为收益×1.5。", "bad");
+  if (hasT(g, "T_NTR")) {
+    g.ntr = 10; trig(g, "T_NTR");
+    addLog(g, "【牛头人克星】觉醒绿帽神功!战力×5,持续10年!", "epic");
+  }
+}
+function ntrCheck(g, id) {
+  if (!hasT(g, "T_NTRTARGET") || !chance(0.3)) return false;
+  trig(g, "T_NTRTARGET");
+  stealWife(g, id);
+  return true;
+}
+function nearbyPeople(g) {
+  return NPCS.map(n => ({ n: n, s: g.npc[n.id] }))
+    .filter(x => x.s.alive && !x.s.stolen && x.s.favor > 0)
+    .sort((a, b) => b.s.favor - a.s.favor);
+}
+function guessNpc(g, ev) {
+  const txt = (ev.title || "") + (ev.text || "");
+  const alive = n => g.npc[n.id].alive && !g.npc[n.id].stolen;
+  let hit = NPCS.find(n => alive(n) && (txt.includes(n.name) || txt.includes(n.title)));
+  if (!hit) {
+    const pool = NPCS.filter(n => n.id !== "N13" && alive(n));
+    hit = pool.length ? pick(pool) : NPCS[0];
+  }
+  return hit.id;
+}
+
+/* ---------------- 子嗣 ---------------- */
+function rollRoot(g) {
+  let r = wpick(CHILD_ROOTS, x => x.weight);
+  if (g.childBoost > 0) {
+    const idx = Math.min(CHILD_ROOTS.length - 1, CHILD_ROOTS.indexOf(r) + 1);
+    r = CHILD_ROOTS[idx];
+    g.childBoost--;
+  }
+  return r;
+}
+function bearChild(g, npcId) {
+  const root = rollRoot(g);
+  const mother = NPC_BY_ID[npcId];
+  const sex = chance(0.5) ? "子" : "女";
+  const kid = {
+    id: "c" + Date.now() + rint(10, 99), name: (g.name ? g.name.charAt(0) : "叶") + pick(CHILD_GIVEN),
+    root: root.id, bornAge: g.age, age: 0, adult: false, mother: npcId, motherName: mother.name, sex: sex
+  };
+  g.children.push(kid);
+  const w = g.wives.find(x => x.id === npcId);
+  if (w) w.kids = (w.kids || 0) + 1;
+  g.npc[npcId].lastBaby = g.age;
+  addLog(g, mother.name + "诞下一" + (sex === "女" ? "女" : "子") + "「" + kid.name + "」,灵根:" + root.name + "。" + root.desc,
+    root.feedMul >= 60 ? "epic" : root.feedMul >= 8 ? "rare" : "good");
+  // 出生奖励
+  const need = REALMS[Math.min(g.realm, 15)].need;
+  const birth = gainExp(g, Math.min(need * 2, need * 0.005 * root.feedMul));
+  if (root.feedMul >= 100) {
+    g.broadcast = { kind: "child", title: "天降异象·" + root.name, lines: [kid.name + "降生!", root.desc, "出生反哺修为 +" + fmt(birth)] };
+  }
+  if (hasT(g, "T_MULTICHILD")) {
+    trig(g, "T_MULTICHILD");
+    const gain = gainExp(g, need * 0.6);           // 无视瓶颈:直接涨修为,不受上限
+    STAT_KEYS.forEach(k => { g.stats[k] = Math.ceil(g.stats[k] * 1.2); }); // 全属性 +20%
+    g.lifeMax += 50;
+    g.powerBonus += 0.03;
+    g.breakBonus += 0.15;
+    addLog(g, "【多子多福】天降功德金光!修为+" + fmt(gain) + ",全属性+20%,寿元+50年,战力永久+3%,下次突破成功率+15%!", "epic");
+  }
+  return kid;
+}
+
+/* ---------------- 效果结算(事件与物品通用) ---------------- */
+function realmUp(g) {
+  if (g.realm >= 16) return false;
+  const nx = g.realm + 1;
+  const life = Math.floor(REALMS[nx].life * (hasT(g, "T_LONGLIFE") ? 1.3 : 1));
+  g.realm = nx;
+  g.lifeMax += life;
+  g.stats.body += 1 + Math.floor(nx / 3);
+  g.stats.wit += 1 + Math.floor(nx / 5);
+  g.stats.luck += nx % 2;
+  g.hpMax = hpMaxOf(g);
+  g.hp = g.hpMax;
+  addLog(g, "【突破】" + REALMS[nx].name + "!寿元+" + life + "年,体魄悟性提升。" + REALMS[nx].flavor, "epic");
+  return true;
+}
+function applyFx(g, fx, ctx) {
+  ctx = ctx || {};
+  const gains = [];
+  if (!fx) return gains;
+  const sign = v => (v >= 0 ? "+" : "") + v;
+  if (fx.exp) { const v = gainExp(g, fx.exp); gains.push("修为" + (v >= 0 ? "+" : "") + fmt(v)); }
+  if (fx.stone) { const v = addStone(g, fx.stone); gains.push("灵石" + (v >= 0 ? "+" : "") + fmt(v)); }
+  if (fx.life) { g.lifeMax += fx.life; gains.push("寿元" + sign(fx.life) + "年"); }
+  if (fx.hp) {
+    if (fx.hp >= 10000) { g.hpBonus += fx.hp; g.hp += fx.hp; gains.push("气血上限+" + fmt(fx.hp)); }   // ≥10000 视为永久上限
+    else if (fx.hp > 0) { g.hp = Math.min(hpMaxOf(g), g.hp + hpMaxOf(g) * fx.hp / 1000); gains.push("气血回复" + (fx.hp / 10) + "%"); }
+    else { const d = hurt(g, -fx.hp / 1000, true); gains.push(d ? "受伤-" + fmt(d) + "气血" : "免疫伤害"); }
+  }
+  STAT_KEYS.forEach(k => {
+    if (fx[k]) { g.stats[k] = Math.max(1, g.stats[k] + fx[k]); gains.push(STAT_NAMES[k] + sign(fx[k])); }
+  });
+  if (fx.favor && ctx.npcId) {
+    const v = fx.favor > 0 && g.buff === "charm_max" ? fx.favor * 2 : fx.favor;
+    setFavor(g, ctx.npcId, v);
+    gains.push(NPC_BY_ID[ctx.npcId].name + "好感" + sign(v));
+  }
+  if (fx.item) { addItem(g, fx.item); gains.push("获得「" + ITEM_BY_ID[fx.item].name + "」"); }
+  if (fx.items) fx.items.forEach(i => { addItem(g, i); gains.push("获得「" + ITEM_BY_ID[i].name + "」"); });
+  if (fx.power) { g.powerBonus += fx.power; gains.push("战力永久" + (fx.power > 0 ? "+" : "") + Math.round(fx.power * 100) + "%"); }
+  if (fx.adopt) {
+    const f = { name: ctx.title ? ctx.title + "的义父" : "义父", deathAge: g.age + 3, enemy: fx.enemy || null };
+    g.fathers.push(f);
+    trig(g, "T_FATHER");
+    gains.push("认了义父(3年内必暴毙)");
+  } else if (fx.enemy) {
+    addEnemy(g, fx.enemy);
+    gains.push("仇人录+「" + fx.enemy.name + "」");
+  }
+  if (fx.child && ctx.npcId) {
+    addWife(g, ctx.npcId, true);
+    bearChild(g, ctx.npcId);
+    gains.push("喜得贵子");
+  }
+  if (fx.breakthrough) { if (realmUp(g)) gains.push("境界突破至" + REALMS[g.realm].name); }
+  if (fx.die) g.dying = ctx.dieText || "陨落";
+  return gains;
+}
+function applyItem(g, item, opts) {
+  opts = opts || {};
+  const u = item.use || {};
+  const gains = [];
+  let mul = 1;
+  if (item.type === "丹药") {
+    if (hasT(g, "T_ALCHEMY")) { mul *= 2; trig(g, "T_ALCHEMY"); }
+    if (hasT(g, "T_PILLGOD")) { mul *= 2; trig(g, "T_PILLGOD"); }
+  }
+  const sword = item.type === "兵器" && hasT(g, "T_SWORDBONE");
+  if (u.exp) gains.push("修为+" + fmt(gainExp(g, u.exp * mul)));
+  if (u.hp) { g.hp = Math.min(hpMaxOf(g), g.hp + hpMaxOf(g) * u.hp * mul / 1000); gains.push("气血回复"); }
+  if (u.life) { g.lifeMax += u.life * mul; gains.push("寿元+" + u.life * mul + "年"); }
+  STAT_KEYS.forEach(k => { if (u[k]) { g.stats[k] += Math.round(u[k] * mul); gains.push(STAT_NAMES[k] + "+" + Math.round(u[k] * mul)); } });
+  if (u.stone) gains.push("灵石+" + fmt(addStone(g, u.stone)));
+  if (u.power) { g.powerBonus += u.power * (sword ? 3 : 1); gains.push("战力永久+" + Math.round(u.power * (sword ? 3 : 1) * 100) + "%"); if (sword) trig(g, "T_SWORDBONE"); }
+  if (u.breakBonus) { g.breakBonus += u.breakBonus; gains.push("下次突破成功率+" + Math.round(u.breakBonus * 100) + "%"); }
+  if (u.shield) { g.shield += u.shield; gains.push("护身符×" + u.shield); }
+  if (u.child) { g.guaranteeChild = true; g.childBoost += (u.childBoost || 0); gains.push("道侣下次必定受孕,灵根提升一档"); }
+  if (u.favor) {
+    let tid = opts.npcId;
+    if (!tid) { const c = nearbyPeople(g)[0]; tid = c ? c.n.id : "N01"; }
+    setFavor(g, tid, u.favor);
+    gains.push(NPC_BY_ID[tid].name + "好感+" + u.favor);
+    if (u.risk && chance(u.risk)) {
+      const n = NPC_BY_ID[tid];
+      hurt(g, 0.3, true);
+      addEnemy(g, { name: n.name, power: n.realm });
+      addLog(g, "合欢散的“清算”来了:" + n.name + "醒来后拔剑相向,你被砍了一剑,她记进了仇人录。", "bad");
+    }
+  }
+  if (u.removeEnemy) {
+    const idx = opts.enemyIdx || 0;
+    const e = g.enemies[idx];
+    if (e) { g.enemies.splice(idx, 1); gains.push("划去仇人「" + e.name + "」"); } else gains.push("仇人录是空的,符纸白烧了");
+  }
+  if (u.adopt && u.risk) {
+    if (chance(1 - u.risk) || chance(clamp(successBonus(g), 0, 0.3))) {
+      const e = gainExp(g, REALMS[g.realm].need * 1.5);
+      g.lifeMax += 80;
+      gains.push("夺舍成功:修为+" + fmt(e) + ",寿元+80年");
+    } else { g.dying = "夺舍失败,魂飞魄散"; gains.push("夺舍失败"); }
+  }
+  if (item.id === "P12") gains.push("储物戒认主,能装更多垃圾了");
+  if (item.id === "P10" && chance(0.05)) gains.push("你喝成了“茶醉”,睡了三天");
+  if (item.type === "丹药" && hasT(g, "T_ALCHEMY") && chance(0.1)) {
+    addItem(g, "P02"); gains.push("丹成异象!额外得到「培元丹」");
+  }
+  return gains;
+}
+
+/* ---------------- 战斗相关 ---------------- */
+function ambush(g, e) {
+  addLog(g, "仇家「" + e.name + "」寻上门来!", "bad");
+  if (hasT(g, "T_HARDEMPEROR") && !chance(winRate(g, e))) {
+    trig(g, "T_HARDEMPEROR");
+    const steal = Math.floor(e.stone * 0.2);
+    addStone(g, steal);
+    addLog(g, "【老阴比】你笑着拱手“有话好说”,下一秒撤退无损,顺手摸走灵石" + fmt(steal) + "。", "rare");
+    return;
+  }
+  if (chance(winRate(g, e))) {
+    const loot = addStone(g, Math.floor(e.stone * (hasT(g, "T_ROBBER") ? 3 : 1) * 0.5));
+    const ex = gainExp(g, Math.floor(e.exp * 0.1));
+    g.enemies = g.enemies.filter(x => x.id !== e.id);
+    g.kills++;
+    if (hasT(g, "T_BLOODCOW")) { trig(g, "T_BLOODCOW"); addLog(g, "【十里坡血牛】真实反伤触发,对方一刀砍下去,刀先崩了。", "rare"); }
+    addLog(g, "你反手镇压了「" + e.name + "」,缴获灵石" + fmt(loot) + ",修为+" + fmt(ex) + "。", "good");
+  } else {
+    const d = hurt(g, rnd(0.25, 0.5), false, true);
+    const lost = Math.floor(g.stone * 0.15);
+    g.stone -= lost;
+    addLog(g, "你不敌「" + e.name + "」,气血-" + fmt(d) + ",灵石被抢走" + fmt(lost) + "。", "bad");
+  }
+}
+
+/* ---------------- 每次行动 / 每年被动 ---------------- */
+function rollMoon(g) {
+  const keys = Object.keys(MOON_BUFFS).filter(k => k !== g.buff);
+  g.buff = pick(keys);
+  trig(g, "T_MOONGOD");
+  addLog(g, "【月抛型概念神】新一期外挂上线:" + MOON_BUFFS[g.buff].name + "!(" + MOON_BUFFS[g.buff].desc + ")", "epic");
+  if (g.buff === "must_treasure") {
+    const it = pick(["P07", "P11"]);
+    addItem(g, it);
+    addLog(g, "必捡仙器生效,你随手捡到「" + ITEM_BY_ID[it].name + "」。", "rare");
+  }
+}
+function perAction(g) {
+  if (hasT(g, "T_BLOODCOW")) {
+    g.hpBonus += 10000; g.hp += 10000; trig(g, "T_BLOODCOW");
+    if (g.actions % 3 === 0) addLog(g, "【十里坡血牛】气血上限无脑+10000!当前血池 " + fmt(hpMaxOf(g)) + "。", "rare");
+  }
+  if (hasT(g, "T_SYSTEM")) {
+    g.streak++; trig(g, "T_SYSTEM");
+    const st = addStone(g, 200 * (g.realm + 1));
+    if (g.streak % 7 === 0) {
+      addItem(g, "P07"); addItem(g, "P19");
+      addLog(g, "叮!连续签到" + g.streak + "天,【七日大礼包】:仙器「诛仙剑」+功法「玉女心经」!系统:宿主,该打脸了。", "epic");
+    } else {
+      addLog(g, "叮!签到成功,灵石+" + fmt(st) + "(连续" + g.streak + "天)。", "good");
+    }
+  }
+  if (hasT(g, "T_MOONGOD") && g.actions % 3 === 0) rollMoon(g);
+  if (g.drunk > 0) g.drunk--;
+}
+function yearly(g) {
+  const hpMax = hpMaxOf(g);
+  g.hp = Math.min(hpMax, g.hp + hpMax * 0.2);
+  if (g.ntr > 0) g.ntr--;
+  if (g.grief > 0) g.grief--;
+
+  // 子嗣成长与反哺
+  let feed = 0;
+  g.children.forEach(c => {
+    c.age = Math.floor(g.age - c.bornAge);
+    const r = ROOT_BY_ID[c.root];
+    if (!c.adult && c.age >= 16) {
+      c.adult = true;
+      const add = Math.max(1, Math.ceil(r.statBonus / 4));
+      STAT_KEYS.forEach(k => { g.stats[k] += add; });
+      addLog(g, "子嗣「" + c.name + "」(" + r.name + ")成年了,你全属性+" + add + "。孩子说:“爹,我要下山了。”", "rare");
+    }
+    if (c.adult) {
+      const need = REALMS[Math.min(g.realm, 15)].need;
+      feed += Math.min(need * 2, need * 0.01 * r.feedMul);
+    }
+  });
+  if (feed > 0) {
+    const v = gainExp(g, feed);
+    g.feedTotal += v;
+    addLog(g, "子嗣孝敬反哺,修为+" + fmt(v) + "。", "good");
+  }
+
+  // 义父暴毙
+  g.fathers = g.fathers.filter(f => {
+    if (g.age >= f.deathAge) {
+      addLog(g, "义父「" + f.name + "」果然暴毙了,临终前死死盯着你:“孩子……你好狠……”", "bad");
+      addEnemy(g, f.enemy || { name: f.name + "的旧部", power: Math.min(16, g.realm + 2) });
+      return false;
+    }
+    return true;
+  });
+
+  // 天煞孤星
+  if (hasT(g, "T_LONESTAR") && chance(0.12)) {
+    const top = nearbyPeople(g)[0];
+    if (top) {
+      trig(g, "T_LONESTAR");
+      const ex = gainExp(g, REALMS[top.n.realm].need);
+      const st = addStone(g, 500 * Math.pow(top.n.realm + 1, 2));
+      killNpc(g, top.n.id);
+      addLog(g, "【天煞孤星】「" + top.n.name + "」今年暴毙了……你继承其修为" + fmt(ex) + "与遗产灵石" + fmt(st) + "。你擦了擦眼泪:“这是命。”", "epic");
+    }
+  }
+  // 魔心种子
+  if (hasT(g, "T_DEMONHEART")) {
+    const add = Math.floor(g.exp * 0.1);
+    g.exp += add; g.seedTimer++; trig(g, "T_DEMONHEART");
+    if (g.seedTimer >= 10) {
+      g.seedTimer = 0;
+      const top = nearbyPeople(g)[0];
+      if (top) {
+        killNpc(g, top.n.id);
+        addLog(g, "【魔心种子】十年之期已至,魔种吞噬了你最亲近的人「" + top.n.name + "」。修为得以保全。", "bad");
+      } else { g.exp = 0; addLog(g, "【魔心种子】无人可献祭,修为被魔种吸干清零!", "bad"); }
+    }
+  }
+  // 穷鬼转世
+  if (hasT(g, "T_POOR")) {
+    const l = Math.floor(g.stone * 0.1);
+    g.stone -= l;
+    if (l > 0) addLog(g, "【穷鬼转世】月圆之夜," + fmt(l) + "灵石莫名消失了。", "bad");
+  }
+  // 丹药当饭吃
+  if (hasT(g, "T_PILLGOD")) {
+    let need = 10;
+    Object.keys(g.bag).forEach(id => {
+      const it = ITEM_BY_ID[id];
+      while (need > 0 && g.bag[id] > 0 && it && it.type === "丹药") {
+        takeItem(g, id); applyItem(g, it); need--;
+      }
+    });
+    if (need > 0) {
+      const d = hurt(g, 0.25, true);
+      g.exp = Math.floor(g.exp * 0.97);
+      addLog(g, "【丹药当饭吃】今年少吃了" + need + "颗丹药,体内丹毒暴走:气血-" + fmt(d) + ",修为-3%。", "bad");
+    } else addLog(g, "【丹药当饭吃】今年的十颗丹药按时下肚,药力翻倍生效。", "good");
+  }
+  // 背刺体质
+  if (hasT(g, "T_BETRAY") && chance(0.1)) {
+    trig(g, "T_BETRAY");
+    const keys = Object.keys(g.bag).filter(k => g.bag[k] > 0);
+    let what;
+    if (keys.length) { const k = pick(keys); takeItem(g, k); what = ITEM_BY_ID[k].name; }
+    else { const l = Math.floor(g.stone * 0.3); g.stone -= l; what = fmt(l) + "灵石"; }
+    if (g.wives.length) {
+      const w = pick(g.wives);
+      removeWife(g, w.id);
+      addEnemy(g, { name: w.name, power: NPC_BY_ID[w.id].realm });
+      addLog(g, "【背刺体质】道侣「" + w.name + "」在你背后捅了一刀,带走了" + what + ",还进了你的仇人录。", "bad");
+    } else addLog(g, "【背刺体质】多年好友在你背后捅了一刀,带走了" + what + "。", "bad");
+  }
+  // 道侣被抢(任何人都有 1.5% 概率)
+  if (g.wives.length && chance(0.015)) stealWife(g, pick(g.wives).id);
+  // 仇家上门
+  if (g.enemies.length) {
+    if (g.hunted && chance(0.4)) {
+      const e = makeEnemy("正道围剿者", Math.min(16, g.realm + 1));
+      addLog(g, "你已被全修仙界通缉(心魔满10)!", "bad");
+      ambush(g, e);
+    } else {
+      const threats = g.enemies.filter(e => e.power <= g.realm + 3);
+      if (threats.length && chance(0.1)) ambush(g, pick(threats));
+    }
+  }
+}
+function advance(g, years) {
+  const before = Math.floor(g.age);
+  g.age = Math.round((g.age + years) * 100) / 100;
+  g.actions++;
+  perAction(g);
+  const after = Math.floor(g.age);
+  for (let y = before; y < after; y++) { yearly(g); if (g.dying) break; }
+}
+
+/* ---------------- 事件辅助 ---------------- */
+function visibleChoices(ev, g) {
+  const out = [];
+  ev.choices.forEach((c, i) => { if (!c.need || hasT(g, c.need)) out.push({ c: c, i: i }); });
+  return out;
+}
+function pickOutcome(outs, g) {
+  const sb = successBonus(g);
+  const list = outs.map(o => ({ o: o, w: o.w * (o.kind === "bad" ? Math.max(0.15, 1 - sb) : 1 + sb) }));
+  return wpick(list, x => x.w).o;
+}
+function refusal(g, npc, what) {
+  if (hasT(g, "T_REJECT")) {
+    trig(g, "T_REJECT");
+    const v = gainExp(g, REALMS[g.realm].need * 0.15 + 100);
+    let extra = "";
+    if (g.rejectCount < 10) { g.rejectCount++; g.powerBonus += 0.1; extra = ",战力永久+10%"; }
+    addLog(g, npc.name + "冷冷道:“" + what + "?你不配。”——【被拒就变强】触发!修为暴涨" + fmt(v) + extra + "。莫欺少年穷!", "epic");
+  } else {
+    setFavor(g, npc.id, -3);
+    const hit = REALMS[npc.realm].mul > REALMS[g.realm].mul ? hurt(g, 0.1, true) : 0;
+    addLog(g, npc.name + "把你拒之门外:“" + what + "?先照照镜子。”" + (hit ? "顺手还赏了你一掌。" : ""), "bad");
+  }
+}
+
+/* ---------------- 开局初始化 ---------------- */
+function startWorld(g) {
+  const idn = IDN_BY_ID[g.identityId];
+  const p = blankPlay();
+  const keep = { phase: "play", meta: g.meta, v: SAVE_VER, draw: g.draw, talents: g.draw.picks.slice(), name: g.name, identityId: g.identityId };
+  Object.keys(g).forEach(k => delete g[k]);
+  Object.assign(g, p, keep);
+  g.age = START_AGE[idn.id] || 16;
+  g.lifeMax = g.age + idn.life + (hasT(g, "T_LONGLIFE") ? 100 : 0) + (hasT(g, "T_SHORTLIFE") ? -30 : 0);
+  g.lifeMax = Math.max(g.lifeMax, g.age + 2);
+  g.stats = { body: idn.stats.body, wit: idn.stats.wit, luck: idn.stats.luck, charm: idn.stats.charm };
+  if (hasT(g, "T_BEAUTY")) g.stats.charm += 50;
+  if (hasT(g, "T_WEAKBODY")) g.stats.wit += 30;
+  g.stone = idn.stone;
+  g.exp = idn.exp;
+  g.realm = INIT_REALM[idn.id] || 0;
+  NPCS.forEach(n => {
+    let f = n.favor + (hasT(g, "T_BEAUTY") ? 30 : 0) + (hasT(g, "T_SHORTLIFE") ? 20 : 0);
+    g.npc[n.id] = { favor: clamp(f, -100, 100), alive: true, stolen: false, lastBaby: -99 };
+  });
+  g.hpMax = hpMaxOf(g);
+  g.hp = g.hpMax;
+  g.reviveLeft = { protag: hasT(g, "T_FATEON") ? 3 : 3, unlucky: 1 };
+  addLog(g, "【穿越】" + g.name + ",你成为了「" + idn.name + "」。", "epic");
+  addLog(g, idn.intro, "info");
+  if (idn.bound.type === "spouse") {
+    g.npc[idn.bound.npc].favor = Math.max(g.npc[idn.bound.npc].favor, 60);
+    addWife(g, idn.bound.npc, true);
+  } else if (idn.bound.type === "enemy") {
+    const n = NPC_BY_ID[idn.bound.npc];
+    g.npc[n.id].favor = Math.min(g.npc[n.id].favor, -30);
+    addEnemy(g, { name: n.name, power: n.realm });
+    addLog(g, "仇人录自动记下:「" + n.name + "」。", "bad");
+  } else if (idn.bound.type === "master") {
+    g.master = idn.bound.npc;
+    setFavor(g, idn.bound.npc, 40);
+    addLog(g, "你与「" + NPC_BY_ID[idn.bound.npc].name + "」有一段师徒/宿主缘分,好感+40。", "rare");
+  }
+  g.talents.forEach(id => {
+    const t = T_BY_ID[id];
+    addLog(g, "携带天赋【" + t.name + "】(" + t.grade + "):" + t.desc, t.grade === "彩" ? "epic" : t.grade === "金" ? "rare" : t.grade === "紫" ? "epic" : "bad");
+  });
+  if (hasT(g, "T_MOONGOD")) rollMoon(g);
+}
+
+/* ---------------- 死亡 / 飞升 / 轮回结算 ---------------- */
+function buildResult(g, cause, ascended) {
+  const idn = IDN_BY_ID[g.identityId];
+  const realmName = REALMS[g.realm].name;
+  const kids = g.children.length, wives = g.wives.length;
+  const score = g.realm * 800 + kids * 150 + wives * 100 + Math.floor(Math.log10(g.exp + 1)) * 100 + g.kills * 30 + (ascended ? 10000 : 0);
+  let title;
+  if (ascended && kids >= 5) title = "多子多福·飞升界计生办劳模";
+  else if (ascended && g.talents.some(t => T_BY_ID[t].grade === "彩")) title = "天道亲儿子·诸天万界第一卷王";
+  else if (ascended) title = "渡劫飞升·终成真仙";
+  else if (g.demon >= 10) title = "吞天魔头·修仙界食堂大妈";
+  else if (g.tstat.T_LONESTAR >= 2) title = "孤星独照·朋友圈清零大师";
+  else if (kids >= 8) title = "人形种马·修仙界人口普查员";
+  else if (wives >= 5) title = "后宫之主·被捅之王";
+  else if (g.realm >= 12) title = "一代宗师·昙花一现";
+  else if (g.realm >= 9) title = "金丹老登·死得其所";
+  else if (g.realm >= 3) title = "炼气期卷王·出师未捷身先死";
+  else title = "新手村摆烂王·开局即巅峰";
+  const talents = g.talents.map(id => "【" + T_BY_ID[id].name + "】").join("");
+  const epitaph = [
+    "此处长眠:" + g.name + "(原「" + idn.name + "」)",
+    "享年" + Math.floor(g.age) + "岁,终境界:" + realmName,
+    cause + "。",
+    "生前携天赋" + talents + ",得道侣" + wives + "人,育子嗣" + kids + "人,镇压仇家" + g.kills + "名。",
+    ascended ? "渡劫成功,白日飞升。身后只留下一地灵石与满屏弹幕:“前排围观!”"
+      : (g.enemies.length ? "仇人录上还有" + g.enemies.length + "个名字没划掉,他们表示节哀,并准备来刨坟。" : "仇人录已清空,不可谓不圆满。"),
+    "墓志铭:" + pick(["莫欺少年穷,可惜他没等到三十年河西。", "主角光环终有尽,作者今日要下班。", "他走得很安详,因为系统说“宿主,该重开了”。", "下辈子一定要选个靠谱的天赋。"])
+  ];
+  return { title: title, cause: cause, ascended: !!ascended, score: score, epitaph: epitaph, realmName: realmName };
+}
+function endLife(g, cause, ascended) {
+  const res = buildResult(g, cause, ascended);
+  g.result = res;
+  g.phase = "end";
+  g.auto = false;
+  g.event = null;
+  const m = g.meta;
+  m.rounds++;
+  m.best = Math.max(m.best, res.score);
+  m.prevTalents = g.talents.slice();
+  m.history.unshift({ name: g.name, identity: IDN_BY_ID[g.identityId].name, realm: res.realmName, score: res.score, title: res.title, ascended: !!ascended });
+  if (m.history.length > 10) m.history.length = 10;
+  addLog(g, "【陨落】" + cause + "——" + res.title, ascended ? "epic" : "bad");
+}
+/* 每次行动后调用:同步血量上限,判定死亡,处理复活 */
+function settle(g) {
+  if (g.phase !== "play") return;
+  g.hpMax = hpMaxOf(g);
+  if (g.hp > g.hpMax) g.hp = g.hpMax;
+  g.stone = Math.max(0, Math.floor(g.stone));
+  if (hasT(g, "T_POOR") && g.stone < 10 && chance(0.4)) {
+    const v = addStone(g, rint(100, 500) * (g.realm + 1));
+    addLog(g, "【穷鬼转世】灵石花光了,你在路边捡到一个神秘小袋子,里面有" + fmt(v) + "灵石!", "rare");
+  }
+  let cause = g.dying || null;
+  const byHp = !cause && g.hp <= 0;
+  if (byHp) cause = "气血归零,身死道消";
+  if (!cause && g.age >= g.lifeMax) cause = "寿元耗尽,坐化于洞府";
+  if (!cause) return;
+  g.dying = null;
+  if (hasT(g, "T_FATESON") && g.reviveLeft.protag > 0) {
+    g.reviveLeft.protag--; trig(g, "T_FATESON");
+    const how = pick(["爷爷附体,替你扛下致命一击", "神秘戒指苏醒,一道白光护住心脉", "路边老乞丐竟是大佬,隔空一指把你救了回来"]);
+    g.hp = Math.floor(hpMaxOf(g) * 0.6);
+    g.lifeMax = Math.max(g.lifeMax, g.age + 20);
+    addLog(g, "【天命主角光环】" + cause + "?不可能!" + how + "。(剩余" + g.reviveLeft.protag + "次)", "epic");
+    return;
+  }
+  if (hasT(g, "T_UNLUCKY") && g.reviveLeft.unlucky > 0) {
+    g.reviveLeft.unlucky--; trig(g, "T_UNLUCKY");
+    g.hp = Math.floor(hpMaxOf(g) * 0.5);
+    g.lifeMax = Math.max(g.lifeMax, g.age + 10);
+    addLog(g, "【非酋之王】天道看你太惨,补偿了一次重开机会!", "rare");
+    return;
+  }
+  if (byHp && g.shield > 0) {
+    g.shield--;
+    g.hp = Math.floor(hpMaxOf(g) * 0.3);
+    addLog(g, "护身符碎裂,替你挡下了致命一击!", "rare");
+    return;
+  }
+  endLife(g, cause, false);
+}
+
+// ============================================================================
+//                              主组件 App
+// ============================================================================
+function App() {
+  const [g, setG] = useState(() => loadSave() || freshGame());
+  const gRef = useRef(g);
+  const actionsRef = useRef({});
+
+  const commit = n => { gRef.current = n; setG(n); };
+  /* 任意阶段修改状态(抽卡 / 读档等) */
+  const mutate = fn => { const n = cloneG(gRef.current); fn(n); commit(n); };
+  /* 修仙阶段的一次行动:深拷贝 -> 修改 -> 结算 -> 提交;有奇遇弹窗时默认禁止其他行动 */
+  const act = (fn, opt) => {
+    opt = opt || {};
+    const cur = gRef.current;
+    if (cur.phase !== "play" || (cur.event && !opt.allowEvent)) return;
+    const n = cloneG(cur);
+    fn(n);
+    settle(n);
+    commit(n);
+  };
+
+  /* ---------- 本地存档 ---------- */
+  useEffect(() => {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(g)); } catch (e) {}
+  }, [g]);
+  const saveNow = () => { try { localStorage.setItem(MANUAL_KEY, JSON.stringify(gRef.current)); return true; } catch (e) { return false; } };
+  const loadNow = () => { const s = loadSave(MANUAL_KEY); if (s) { commit(s); return true; } return false; };
+  const hasSave = () => { try { return !!localStorage.getItem(MANUAL_KEY); } catch (e) { return false; } };
+  /* 轮回重开:保留 meta(轮回次数、上一世天赋、历史) */
+  const restart = () => { commit(freshGame(gRef.current.meta)); };
+  /* 彻底清档 */
+  const hardReset = () => { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(MANUAL_KEY); } catch (e) {} commit(freshGame()); };
+
+  /* ---------- 开局抽卡 ---------- */
+  const refreshPool = () => mutate(n => {
+    n.draw.pool = rollPool(n.draw.picks);
+    n.draw.refresh++;
+  });
+  const togglePick = id => mutate(n => {
+    const i = n.draw.picks.indexOf(id);
+    if (i >= 0) { n.draw.picks.splice(i, 1); if (n.draw.keep === id) n.draw.keep = null; }
+    else if (n.draw.picks.length < 3) n.draw.picks.push(id);
+  });
+  /* 保留上一世的 1 个天赋(占 1 个名额) */
+  const toggleKeep = id => mutate(n => {
+    if (n.draw.keep === id) {
+      n.draw.keep = null;
+      n.draw.picks = n.draw.picks.filter(x => x !== id);
+      return;
+    }
+    if (n.draw.keep) n.draw.picks = n.draw.picks.filter(x => x !== n.draw.keep);
+    n.draw.pool = n.draw.pool.filter(x => x !== id);
+    n.draw.picks = n.draw.picks.filter(x => x !== id);
+    if (n.draw.picks.length >= 3) n.draw.picks.pop();
+    n.draw.picks.unshift(id);
+    n.draw.keep = id;
+  });
+  const rerollName = () => mutate(n => { n.name = randName(); });
+  /* 选满3个 -> 随机分配身份 -> 进入“身份降临”阶段 */
+  const confirmDraw = () => mutate(n => {
+    if (n.draw.picks.length !== 3) return;
+    n.identityId = pick(IDENTITIES).id;
+    if (!n.name) n.name = randName();
+    n.phase = "intro";
+  });
+  const rerollIdentity = () => mutate(n => { n.identityId = pick(IDENTITIES).id; });
+  const startLife = () => mutate(n => { startWorld(n); });
+
+  /* ---------- 1. 闭关苦修 ---------- */
+  const handleCultivate = () => act(g => {
+    advance(g, 1);
+    if (g.phase !== "play" || g.dying) return;
+    let base = Math.max(40, REALMS[g.realm].need * rnd(0.11, 0.2)) * (1 + g.stats.wit / 80);
+    if (hasT(g, "T_ALLDAO")) { base *= 3; trig(g, "T_ALLDAO"); }
+    const r = Math.random();
+    if (r < 0.12 + g.stats.wit / 1000) {
+      base *= 3;
+      if (chance(0.3)) g.stats.wit += 1;
+      const v = gainExp(g, base);
+      addLog(g, "【顿悟】你枕着一块石头睡了一觉,梦里大道三千。修为+" + fmt(v) + (chance(0.3) ? ",悟性+1" : "") + "。", "rare");
+    } else if (r > 0.92) {
+      const d = hurt(g, rnd(0.25, 0.4), true);
+      g.exp = Math.max(0, g.exp - Math.floor(REALMS[g.realm].need * 0.08));
+      const v = gainExp(g, base * 0.3);
+      addLog(g, "【走火入魔】灵气逆行,你喷出一口老血。气血" + (d ? "-" + fmt(d) : "无损(万法不沾)") + ",修为净变化" + fmt(v - REALMS[g.realm].need * 0.08) + "。", "bad");
+    } else {
+      const v = gainExp(g, base);
+      addLog(g, "闭关一年,吐纳天地灵气,修为+" + fmt(v) + "。", "good");
+    }
+  });
+
+  /* ---------- 2. 外出历练 ---------- */
+  const handleExplore = () => act(g => {
+    advance(g, 0.5);
+    if (g.phase !== "play" || g.dying) return;
+    if (g.buff === "must_treasure" && chance(0.5)) {
+      const it = pick(["P07", "P11"]); addItem(g, it);
+      addLog(g, "【必捡仙器】历练途中你随手捡到「" + ITEM_BY_ID[it].name + "」!", "rare");
+    }
+    if (chance(0.82)) {
+      const pool = EVENTS.filter(e => e.id !== g.lastEvent);
+      const ev = wpick(pool, e => 1 + (e.choices.some(c => c.need && hasT(g, c.need)) ? 1.5 : 0));
+      g.lastEvent = ev.id;
+      g.event = { id: ev.id, step: "choose", npcId: guessNpc(g, ev) };
+      addLog(g, "【奇遇】" + ev.title, "rare");
+    } else {
+      const m = pick(MINOR_EVENTS);
+      const s = 1 + g.realm * 2;
+      const fx = {};
+      if (m.stone) fx.stone = Math.floor(m.stone * s);
+          if (m.expF) fx.exp = Math.floor(REALMS[g.realm].need * m.expF);
+      if (m.hp) fx.hp = m.hp;
+      if (m.charm) fx.charm = m.charm;
+      if (m.wit) fx.wit = m.wit;
+      if (m.item) fx.item = m.item;
+      const gains = applyFx(g, fx);
+      addLog(g, m.t + (gains.length ? "(" + gains.join(",") + ")" : ""), m.k);
+    }
+  });
+
+  /* ---------- 奇遇选项结算(含【大孝子认义父】【沙雕之王】翻转) ---------- */
+  const handleEventChoice = idx => act(g => {
+    if (!g.event) return;
+    const ev = EVENT_BY_ID[g.event.id];
+    const c = ev && ev.choices[idx];
+    if (!c || (c.need && !hasT(g, c.need))) return;
+    const npcId = g.event.npcId;
+    let o = pickOutcome(c.outcomes, g);
+    if (c.need) trig(g, c.need);
+    if (hasT(g, "T_MEME") && chance(0.5)) {
+      const pool = o.kind === "bad"
+        ? c.outcomes.filter(x => x.kind !== "bad")
+        : c.outcomes.filter(x => x.kind === "bad");
+      if (pool.length) {
+        o = wpick(pool);
+        trig(g, "T_MEME");
+        addLog(g, "【沙雕之王】天道没看懂你的操作,结果被翻转了一次!", "epic");
+      }
+    }
+    const fx = Object.assign({}, o.fx);
+    if (fx.favor > 0 && g.wives.some(w => w.id === npcId) && ntrCheck(g, npcId)) delete fx.favor;
+    const ctx = { npcId: npcId, title: ev.title, dieText: "「" + ev.title + "」中身死道消" };
+    const npc = NPC_BY_ID[npcId];
+    const text = o.text.replace(/\{npc\}/g, npc ? npc.name : "对方");
+    const gains = applyFx(g, fx, ctx);
+    addLog(g, "【" + ev.title + "】" + text, o.kind);
+    if (gains.length) addLog(g, "结果:" + gains.join(","), o.kind === "bad" ? "bad" : "good");
+    g.event = null;
+  }, { allowEvent: true });
+
+  /* ---------- 3. 冲击境界 / 渡九九天劫 ---------- */
+  const handleBreakthrough = () => act(g => {
+    const ascend = g.realm >= 16;
+    const need = expNeed(g);
+    if (g.exp < need) { addLog(g, "修为不足,还差" + fmt(need - g.exp) + "。强行冲关只会炸丹田。", "bad"); return; }
+    advance(g, 1);
+    if (g.phase !== "play" || g.dying) return;
+    const nx = ascend ? 16 : g.realm + 1;
+    let rate = REALMS[nx].rate + g.breakBonus + successBonus(g) * 0.5 + g.stats.wit / 1000;
+    if (hasT(g, "T_ALLDAO")) { rate += 0.3; trig(g, "T_ALLDAO"); }
+    if (hasT(g, "T_CURSE")) { rate -= 0.2; trig(g, "T_CURSE"); }
+    rate = clamp(rate, 0.05, 0.99);
+    const forced = g.buff === "break100";
+    if (forced) rate = 1;
+    addLog(g, "你开始冲击「" + REALMS[nx].name + "」,成功率 " + Math.round(rate * 100) + "%。", "info");
+
+    // 雷劫(筑基及以后)
+    if (nx >= 9) {
+      let frac = ascend ? 0.9 : 0.12 + nx * 0.03;
+      if (hasT(g, "T_CURSE")) { frac += 0.15; addLog(g, "【天道弃子】天道嫌你,额外补了一道雷:“废物,你怎么还不死。”", "bad"); }
+      if (hasT(g, "T_BLOODCOW")) {
+        frac *= 0.2; trig(g, "T_BLOODCOW");
+        addLog(g, "【十里坡血牛】你用无底血池硬扛天雷,雷劫被反伤劈得没了脾气。", "rare");
+      }
+      const d = hurt(g, frac, false);
+      addLog(g, d ? "天雷加身,气血-" + fmt(d) + "。" : "天雷劈在身上,毫发无损。", d ? "bad" : "good");
+      if (g.hp <= 0 && g.shield <= 0) { g.dying = "渡劫失败,被天雷劈成焦炭"; return; }
+    }
+
+    const ok = chance(rate);
+    g.breakBonus = 0;
+    if (ok) {
+      g.exp -= need;
+      if (ascend) {
+        g.exp = 0;
+        endLife(g, "九九天劫尽数扛下,白日飞升", true);
+        return;
+      }
+      realmUp(g);
+      if (hasT(g, "T_LONGLIFE")) trig(g, "T_LONGLIFE");
+      if (REALMS[g.realm].life >= 200) {
+        g.broadcast = { kind: "break", title: "突破·" + REALMS[g.realm].name, lines: [REALMS[g.realm].flavor, "寿元上限 " + fmt(g.lifeMax) + " 年"] };
+      }
+    } else {
+      const lose = Math.floor(need * 0.2);
+      g.exp = Math.max(0, g.exp - lose);
+      g.stats.luck = Math.max(1, g.stats.luck - 1);
+      addLog(g, "突破失败!灵气反噬,修为-" + fmt(lose) + "。你抱着空丹瓶哭了一整晚。", "bad");
+    }
+  });
+
+  /* ---------- 求偶门槛:道侣直接通过,非道侣好感不足则被拒 ---------- */
+  const courtGate = (g, npc, favorNeed, what) => {
+    const st = g.npc[npc.id];
+    if (!st.alive) { addLog(g, npc.name + "已不在人世。", "bad"); return false; }
+    if (st.stolen) { addLog(g, npc.name + "已被别人抢走,你只能对着月亮叹气。", "bad"); return false; }
+    if (g.wives.some(w => w.id === npc.id)) return true;
+    if (st.favor < favorNeed) { refusal(g, npc, what); return false; }
+    if (ntrCheck(g, npc.id)) return false;
+    if (!addWife(g, npc.id)) {
+      addLog(g, "你的道侣已满" + WIFE_LIMIT + "位," + npc.name + "挑眉:“想娶我?先把家里清理干净。”", "bad");
+      return false;
+    }
+    return true;
+  };
+
+  /* ---------- 4. 后宫赠礼(含【舔狗万倍返还】) ---------- */
+  const handleGift = (npcId, itemId) => act(g => {
+    const npc = NPC_BY_ID[npcId];
+    const st = g.npc[npcId];
+    if (!npc || !st.alive || st.stolen) { addLog(g, "这位已经不能收礼了。", "bad"); return; }
+    let cost, giftName;
+    if (itemId) {
+      if (!g.bag[itemId]) return;
+      cost = Math.max(100, ITEM_BY_ID[itemId].price || 300);
+      giftName = ITEM_BY_ID[itemId].name;
+      takeItem(g, itemId);
+    } else {
+      cost = Math.max(100, Math.floor(REALMS[g.realm].need * 0.02));
+      if (g.stone < cost) { addLog(g, "灵石不足" + fmt(cost) + ",你连舔狗的资格都没有。", "bad"); return; }
+      g.stone -= cost;
+      giftName = fmt(cost) + "灵石";
+    }
+    advance(g, 0.25);
+    if (g.phase !== "play" || g.dying) return;
+    let d = Math.round(8 + Math.pow(cost, 0.35));
+    if (hasT(g, "T_BEAUTY")) { d *= 2; trig(g, "T_BEAUTY"); }
+    if (g.buff === "charm_max") d *= 2;
+    setFavor(g, npcId, d);
+    addLog(g, "你把" + giftName + "送给" + npc.name + ",好感+" + d + "。", "good");
+
+    if (hasT(g, "T_LICKDOG")) {
+      trig(g, "T_LICKDOG");
+      const mul = Math.floor(Math.exp(rnd(Math.log(100), Math.log(10000))));
+      const kind = pick(["stone", "pill", "book"]);
+      const lines = [npc.name + "说:“你是个好人。”", "系统:叮——万倍返还触发!×" + mul];
+      if (kind === "stone") {
+        const v = addStone(g, cost * mul);
+        lines.push("海量灵石从天而降:+" + fmt(v));
+        if (mul >= 2000) { addItem(g, "P18"); lines.push("还附赠「海量灵石袋」一只"); }
+      } else if (kind === "pill") {
+        const it = mul >= 3000 ? "P16" : "P04";
+        addItem(g, it);
+        if (mul >= 6000) addItem(g, "P05");
+        lines.push("高阶仙丹入袋:「" + ITEM_BY_ID[it].name + "」" + (mul >= 6000 ? "+「多子多福丸」" : ""));
+      } else {
+        const it = mul >= 1000 ? "P17" : "P19";
+        addItem(g, it);
+        lines.push("神级功法落入掌中:「" + ITEM_BY_ID[it].name + "」");
+      }
+      g.broadcast = { kind: "lickdog", title: "舔狗万倍返还 ×" + mul, lines: lines };
+      addLog(g, "【舔狗万倍返还】×" + mul + "!" + lines.slice(2).join(","), "epic");
+    }
+  });
+
+  /* ---------- 5a. 双修 ---------- */
+  const handleDualCultivate = npcId => act(g => {
+    const npc = NPC_BY_ID[npcId];
+    advance(g, 0.5);
+    if (g.phase !== "play" || g.dying) return;
+    if (!courtGate(g, npc, 60, "求双修")) return;
+    let v = Math.max(REALMS[g.realm].need * 0.3, REALMS[npc.realm].need * 0.05) * rnd(0.8, 1.2);
+    v = gainExp(g, v);
+    setFavor(g, npcId, 3);
+    addLog(g, "你与" + npc.name + "共修大道,水乳交融,修为+" + fmt(v) + "。", "rare");
+    if (npcId === "N03" && chance(0.25)) {
+      const l = Math.floor(g.exp * 0.05);
+      g.exp -= l;
+      const d = hurt(g, 0.1, true);
+      addLog(g, "圣女又偷偷采了你一口:修为-" + fmt(l) + ",气血-" + fmt(d) + "。她笑:“小弟弟,多谢款待。”", "bad");
+    }
+  });
+
+  /* ---------- 5b. 孕育子嗣 ---------- */
+  const handleHaveBaby = npcId => act(g => {
+    const npc = NPC_BY_ID[npcId];
+    advance(g, 1);
+    if (g.phase !== "play" || g.dying) return;
+    if (!courtGate(g, npc, 80, "想要你的孩子")) return;
+    const st = g.npc[npcId];
+    const forced = g.guaranteeChild;
+    if (!forced && g.age - st.lastBaby < 2) {
+      addLog(g, npc.name + "刚生完不久,瞪了你一眼:“让我歇两年。”", "bad");
+      return;
+    }
+    const p = 0.35 + st.favor / 300 + g.stats.luck / 500 + (hasT(g, "T_MULTICHILD") ? 0.2 : 0);
+    if (forced || chance(clamp(p, 0.1, 0.9))) {
+      g.guaranteeChild = false;
+      bearChild(g, npcId);
+    } else {
+      addLog(g, "你与" + npc.name + "努力了一整年,肚子没有动静。她说:“再试试。”", "info");
+    }
+  });
+
+  /* ---------- 6. 仇人录上门镇压 ---------- */
+  const handleRevenge = enemyId => act(g => {
+    const e = g.enemies.find(x => x.id === enemyId);
+    if (!e) return;
+    advance(g, 0.5);
+    if (g.phase !== "play" || g.dying) return;
+    // 嘴遁
+    if (hasT(g, "T_BARDHEART")) {
+      const p = clamp(0.3 + g.stats.charm * 0.005, 0.3, 0.85);
+      if (chance(p)) {
+        trig(g, "T_BARDHEART");
+        g.enemies = g.enemies.filter(x => x.id !== e.id);
+        g.followers++;
+        const v = gainExp(g, Math.floor(e.exp * 0.2));
+        addLog(g, "【嘴遁大师】你一句“你听我解释”,「" + e.name + "」热泪盈眶,当场拜你为主。修为+" + fmt(v) + "。", "epic");
+        return;
+      }
+      gainExp(g, Math.max(10, Math.floor(REALMS[g.realm].need * 0.01)));
+      addLog(g, "【嘴遁大师】劝降失败,但你的台词也让你有所感悟。", "info");
+    }
+    if (chance(winRate(g, e))) {
+      const loot = addStone(g, Math.floor(e.stone * (hasT(g, "T_ROBBER") ? 3 : 1)));
+      const ex = gainExp(g, Math.floor(e.exp * 0.3));
+      g.enemies = g.enemies.filter(x => x.id !== e.id);
+      g.kills++;
+      addLog(g, "你上门镇压「" + e.name + "」,缴获全部身家灵石" + fmt(loot) + ",修为+" + fmt(ex) + "。", "good");
+      if (hasT(g, "T_ROBBER")) trig(g, "T_ROBBER");
+      if (hasT(g, "T_BLOODCOW")) { trig(g, "T_BLOODCOW"); addLog(g, "【十里坡血牛】对方的刀先崩了,真实反伤触发。", "rare"); }
+      if (chance(0.3)) { const it = pick(["P01", "P02", "P13", "P20"]); addItem(g, it); addLog(g, "从对方身上搜出「" + ITEM_BY_ID[it].name + "」。", "good"); }
+      if (hasT(g, "T_DEVOUR")) {
+        trig(g, "T_DEVOUR");
+        const ab = gainExp(g, Math.floor(e.exp * 0.5));
+        g.demon++;
+        addLog(g, "【吞天魔功】你吞噬了对方50%修为,修为+" + fmt(ab) + ",心魔" + g.demon + "/10。", "epic");
+        if (g.demon >= 10 && !g.hunted) { g.hunted = true; addLog(g, "心魔满10,你被当成魔头,全修仙界开始追杀!", "bad"); }
+      }
+      if (e.female && e.npcId) {
+        const npc = NPC_BY_ID[e.npcId];
+        if (g.npc[e.npcId].alive && !g.npc[e.npcId].stolen) {
+          if (addWife(g, e.npcId)) addLog(g, "你对" + npc.name + "说:“从今天起,你是我的人。”她咬牙切齿地被【收入房中】。", "epic");
+          else addLog(g, "你想把" + npc.name + "收入房中,但道侣名额已满,只好先关着。", "info");
+        }
+      }
+    } else {
+      if (hasT(g, "T_HARDEMPEROR")) {
+        trig(g, "T_HARDEMPEROR");
+        const s = addStone(g, Math.floor(e.stone * 0.2));
+        addLog(g, "【老阴比】打不过就撤,临走顺走对方灵石" + fmt(s) + "。", "rare");
+        return;
+      }
+      const d = hurt(g, rnd(0.3, 0.6), false, true);
+      const lost = Math.floor(g.stone * 0.2);
+      g.stone -= lost;
+      addLog(g, "你不敌「" + e.name + "」,气血-" + fmt(d) + ",灵石被抢走" + fmt(lost) + "。", "bad");
+      if (g.hp <= 0 && g.shield <= 0) g.dying = "被仇家「" + e.name + "」当场斩杀";
+    }
+  });
+
+  /* ---------- 7. 储物戒用药 / 万宝楼购买 ---------- */
+  const handleUseItem = (itemId, opts) => act(g => {
+    const it = ITEM_BY_ID[itemId];
+    if (!it || !g.bag[itemId]) return;
+    takeItem(g, itemId);
+    const gains = applyItem(g, it, opts || {});
+    addLog(g, "你使用了「" + it.name + "」。" + (gains.length ? gains.join(",") + "。" : ""), "rare");
+    if (hasT(g, "T_PILLGOD") && it.type === "丹药") addLog(g, "【丹药当饭吃】药效额外触发一次!", "epic");
+  });
+  const handleBuyItem = (itemId, qty) => act(g => {
+    const it = ITEM_BY_ID[itemId];
+    qty = qty || 1;
+    if (!it || !it.shop) return;
+    const price = Math.floor(it.price * (hasT(g, "T_POOR") ? 1.5 : 1)) * qty;
+    if (g.stone < price) { addLog(g, "灵石不足,万宝楼伙计白了你一眼:“没钱别摸。”", "bad"); return; }
+    g.stone -= price;
+    addItem(g, itemId, qty);
+    addLog(g, "你在万宝楼花" + fmt(price) + "灵石买下「" + it.name + "」×" + qty + "。", "good");
+  });
+
+  /* ---------- 酒剑仙:喝酒 ---------- */
+  const handleDrink = () => act(g => {
+    if (!hasT(g, "T_ALCOHOL")) return;
+    advance(g, 0.25);
+    if (g.phase !== "play" || g.dying) return;
+    g.drunk = 4;
+    trig(g, "T_ALCOHOL");
+    addLog(g, "【酒剑仙】你干了一坛,战力×3,持续数次行动。", "epic");
+    if (chance(0.5)) {
+      const name = pick(["醉仙楼掌柜", "邻桌大汉", "路过的剑修", "隔壁宗门长老"]);
+      addEnemy(g, { name: name, power: clamp(g.realm + rint(0, 2), 0, 16) });
+      addLog(g, "醉里挑灯看剑,你骂了「" + name + "」一句,醒来多了一个仇家。", "bad");
+    }
+  });
+
+  /* ---------- 杂项交互 ---------- */
+  const toggleAuto = () => mutate(n => { if (n.phase === "play") n.auto = !n.auto; });
+  const closeBroadcast = () => mutate(n => { n.broadcast = null; });
+
+  /* ---------- 自动修仙定时器 ---------- */
+  actionsRef.current = { handleCultivate, handleExplore, handleBreakthrough, handleEventChoice, handleUseItem };
+  useEffect(() => {
+    if (!g.auto || g.phase !== "play") return;
+    const timer = setInterval(() => {
+      const cur = gRef.current;
+      const A = actionsRef.current;
+      if (!cur.auto || cur.phase !== "play") return;
+      if (cur.broadcast) return;
+      if (cur.event) {
+        const vis = visibleChoices(EVENT_BY_ID[cur.event.id], cur);
+        const talent = vis.filter(v => v.c.need);
+        A.handleEventChoice((talent.length ? pick(talent) : pick(vis)).i);
+        return;
+      }
+      if (cur.lifeMax - cur.age < 5 && cur.bag.P04) { A.handleUseItem("P04"); return; }
+      if (cur.hp < cur.hpMax * 0.4 && cur.bag.P13) { A.handleUseItem("P13"); return; }
+      if (cur.exp >= expNeed(cur) && cur.hp > cur.hpMax * 0.5) { A.handleBreakthrough(); return; }
+      if (cur.hp < cur.hpMax * 0.4) { A.handleCultivate(); return; }
+      if (chance(0.75)) A.handleCultivate(); else A.handleExplore();
+    }, 900);
+    return () => clearInterval(timer);
+  }, [g.auto, g.phase]);
+
+  /* ---------- 供界面使用的派生数据 ---------- */
+  const power = g.phase === "play" || g.phase === "end" ? calcPower(g) : 0;
+  const needExp = g.phase === "play" || g.phase === "end" ? expNeed(g) : 0;
+  const curEvent = g.event ? EVENT_BY_ID[g.event.id] : null;
+  const curIdentity = g.identityId ? IDN_BY_ID[g.identityId] : null;
+  const prevTalents = (g.meta && g.meta.prevTalents) || [];
+
+// ====== 第二部分结束，等待输出第三部分 ======
+  /* ===== 第三部分:UI 辅助状态(Hook 必须在 return 之前) ===== */
+  const [tab, setTab] = useState(0);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [shopInRing, setShopInRing] = useState(false);
+  const [toast, setToast] = useState("");
+  const flash = msg => { setToast(msg); setTimeout(() => setToast(""), 2000); };
+  const logEnd = useRef(null);
+  useEffect(() => { if (logEnd.current) logEnd.current.scrollIntoView({ behavior: "smooth", block: "end" }); }, [g.logs ? g.logs.length : 0]);
+
+  const logClass = l => {
+    if (l.k === "bad") return "log-line log-bad";
+    if (/诞下|道侣|双修|好感|收入房中|孕|情书|表白/.test(l.t) && l.k !== "bad") return "log-line";
+    if (/【(舔狗|十里坡|月抛|多子|天命|签到|大孝子|被拒|老阴比|沙雕|酒剑仙|吞天|天煞|嘴遁|魔心|拷贝)/.test(l.t)) return "log-line log-rare";
+    if (l.k === "epic") return "log-line log-epic";
+    if (l.k === "rare") return "log-line log-rare";
+    if (l.k === "good") return "log-line log-good";
+    return "log-line";
+  };
+  const logStyle = l => (/诞下|道侣|双修|收入房中|孕/.test(l.t) && l.k !== "bad") ? { color: "#ffb3d1", borderLeftColor: "#ff6fa8" } : {};
+
+  const gradeCls = t => t.grade === "彩" ? "grade-rainbow" : t.grade === "金" ? "grade-gold" : t.grade === "紫" ? "grade-purple" : "grade-black";
+  const gradeTxt = t => t.grade === "彩" ? "rainbow-text" : t.grade === "金" ? "text-gold-grade" : t.grade === "紫" ? "text-purple-grade" : "text-black-grade";
+  const gradeLabel = t => t.grade === "彩" ? "天道级" : t.grade === "金" ? "仙品" : t.grade === "紫" ? "奇葩·邪魔" : "天谴";
+
+  const renderTalent = (t, opts) => {
+    opts = opts || {};
+    const body = (
+      <div className={t.grade === "彩" ? "inner" : "p-3"} style={{ height: "100%" }}>
+        <div className="flex justify-between items-center mb-1">
+          <span className="tname text-lg">{t.name}</span>
+          <span className={"text-xs " + gradeTxt(t)}>{gradeLabel(t)}</span>
+        </div>
+        <div className="text-xs leading-relaxed" style={{ color: "#cfc8b2" }}>{opts.full === false ? t.desc.slice(0, 60) + "…" : t.desc}</div>
+        {opts.extra}
+      </div>
+    );
+    return (
+      <div key={t.id} onClick={opts.onClick}
+        className={gradeCls(t) + " " + (opts.onClick ? "cursor-pointer " : "") + (opts.selected ? "ring-4 ring-white/80 " : "") + (opts.dim ? "opacity-40 " : "")}
+        style={{ transition: "transform .2s" }}>
+        {body}
+      </div>
+    );
+  };
+
+  const shopPrice = it => Math.floor(it.price * (hasT(g, "T_POOR") ? 1.5 : 1));
+  const renderShop = () => (
+    <div className="space-y-2">
+      <div className="text-sm" style={{ color: "#f5d87a" }}>💰 持有灵石:{fmt(g.stone || 0)}{hasT(g, "T_POOR") ? "(穷鬼转世:物价×1.5)" : ""}</div>
+      {ITEMS.filter(i => i.shop).map(it => (
+        <div key={it.id} className="gold-card p-2">
+          <div className="flex justify-between items-center">
+            <span><b className="tier-legend">{it.name}</b> <span className="tag">{it.tier}</span><span className="tag tag-jade">{it.type}</span></span>
+            <button className="btn-gold text-sm" disabled={g.stone < shopPrice(it)} onClick={() => handleBuyItem(it.id, 1)}>{fmt(shopPrice(it))} 灵石</button>
+          </div>
+          <div className="text-xs mt-1" style={{ color: "#b9b29a" }}>{it.desc}</div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const metOf = id => {
+    const s = g.npc && g.npc[id];
+    return !!s && (s.met || (g.wives || []).some(w => w.id === id) || g.master === id || (g.enemies || []).some(e => e.npcId === id));
+  };
+
+  const bagIds = Object.keys(g.bag || {}).filter(k => g.bag[k] > 0);
+  const fedPerYear = (g.children || []).filter(c => c.adult).reduce((s, c) => {
+    const r = ROOT_BY_ID[c.root];
+    const need = REALMS[Math.min(g.realm, 15)].need;
+    return s + Math.min(need * 2, need * 0.01 * r.feedMul);
+  }, 0);
+
+  return (
+    <div className="min-h-screen" style={{ color: "var(--text)" }}>
+      {toast && <div style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)", zIndex: 90, background: "#1c160a", border: "1px solid #d4af37", color: "#f5d87a", padding: "8px 20px", borderRadius: 8 }}>{toast}</div>}
+
+      {/* ============ 全屏播报 ============ */}
+      {g.broadcast && (
+        <div className="modal-mask" style={{ zIndex: 80, background: "rgba(10,8,0,0.9)" }} onClick={closeBroadcast}>
+          <div className="gold-card pop-in p-8 text-center max-w-xl" style={{ boxShadow: "0 0 80px rgba(245,216,122,0.8)" }}>
+            <div className="text-4xl gold-title font-bold mb-4">{g.broadcast.title}</div>
+            {g.broadcast.lines.map((l, i) => <div key={i} className="text-lg my-1" style={{ color: i === 0 ? "#ffd84d" : "#e8e2cf" }}>{l}</div>)}
+            <button className="btn-gold mt-6" onClick={closeBroadcast}>笑纳天道馈赠</button>
+          </div>
+        </div>
+      )}
+
+      {/* ============ 阶段一:轮回殿 ============ */}
+      {g.phase === "draw" && (
+        <div className="max-w-6xl mx-auto p-4">
+          <div className="text-center my-4">
+            <div className="text-4xl md:text-5xl font-bold gold-title">诸天轮回 · 脑洞修仙模拟器</div>
+            <div className="mt-2" style={{ color: "#9fb7ac" }}>轮回殿 · 十连抽天赋(第 {g.meta.rounds + 1} 世)</div>
+          </div>
+          <div className="gold-card p-4 mb-4 flex flex-wrap items-center gap-3 justify-between">
+            <div>
+              已选 <b className="text-gold-grade">{g.draw.picks.length}/3</b>
+              <span className="ml-3 text-sm" style={{ color: "#9fb7ac" }}>逆天改命已用 {g.draw.refresh} 次(无限次)</span>
+              <span className="ml-3 text-sm" style={{ color: "#9fb7ac" }}>历史最高分:{g.meta.best}</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <button className="btn-jade" onClick={refreshPool}>🔄 逆天改命(重抽)</button>
+              <button className="btn-gold" disabled={g.draw.picks.length !== 3} onClick={confirmDraw}>⚡ 开启仙途(需选满3个)</button>
+              {hasSave() && <button className="btn-gold" onClick={() => flash(loadNow() ? "已读取手动存档" : "还没有手动存档,请先点保存")}>📜 读档</button>}
+            </div>
+          </div>
+
+          {prevTalents.length > 0 && (
+            <div className="jade-card p-4 mb-4">
+              <div className="mb-2" style={{ color: "#b8f0dc" }}>🌀 继承上一世天赋(只可保留 1 个,占用 1 个名额):</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {prevTalents.map(id => renderTalent(T_BY_ID[id], { onClick: () => toggleKeep(id), selected: g.draw.keep === id, extra: <div className="mt-1 text-xs text-gold-grade">{g.draw.keep === id ? "✔ 已继承" : "点击继承"}</div> }))}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {g.draw.pool.map(id => {
+              const t = T_BY_ID[id];
+              const sel = g.draw.picks.indexOf(id) >= 0;
+              return renderTalent(t, { onClick: () => togglePick(id), selected: sel, dim: !sel && g.draw.picks.length >= 3, extra: <div className="mt-2 text-xs" style={{ color: "#f5d87a" }}>{sel ? "✔ 已选择(再点取消)" : "点击选择"}</div> });
+            })}
+          </div>
+          {g.draw.picks.length > 0 && (
+            <div className="gold-card p-3 mt-4">
+              <div className="text-sm mb-1" style={{ color: "#f5d87a" }}>当前选择:</div>
+              {g.draw.picks.map(id => <span key={id} className={"tag " + (T_BY_ID[id].grade === "黑" ? "tag-red" : T_BY_ID[id].grade === "紫" ? "tag-purple" : "")}>{T_BY_ID[id].name}</span>)}
+            </div>
+          )}
+          {g.meta.history.length > 0 && (
+            <div className="gold-card p-3 mt-4">
+              <div className="mb-1 gold-title">往世轮回录</div>
+              {g.meta.history.map((h, i) => (
+                <div key={i} className="text-sm" style={{ color: "#cfc8b2" }}>
+                  {h.ascended ? "🌟" : "💀"} {h.name}({h.identity})· {h.realm} · {h.score}分 · {h.title}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============ 阶段二:身份降临 ============ */}
+      {g.phase === "intro" && curIdentity && (
+        <div className="max-w-3xl mx-auto p-4 pt-10">
+          <div className="gold-card p-6 pop-in">
+            <div className="text-center">
+              <div className="text-6xl float-glow">{curIdentity.icon}</div>
+              <div className="text-3xl font-bold gold-title mt-2">{curIdentity.name}</div>
+              <div className="text-sm mt-1" style={{ color: "#9fb7ac" }}>{curIdentity.tip}</div>
+            </div>
+            <hr className="divider-gold" />
+            <p className="leading-loose" style={{ color: "#e8e2cf" }}>{curIdentity.intro}</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-sm">
+              <div className="jade-card p-2 text-center">寿元 {curIdentity.life} 年</div>
+              <div className="jade-card p-2 text-center">灵石 {curIdentity.stone}</div>
+              <div className="jade-card p-2 text-center">体魄 {curIdentity.stats.body} 悟性 {curIdentity.stats.wit}</div>
+              <div className="jade-card p-2 text-center">气运 {curIdentity.stats.luck} 魅力 {curIdentity.stats.charm}</div>
+            </div>
+            <div className="mt-3 text-sm" style={{ color: "#b9b29a" }}>
+              初始羁绊:{curIdentity.bound.type === "none" ? "无" : (curIdentity.bound.type === "spouse" ? "道侣 " : curIdentity.bound.type === "enemy" ? "仇人 " : "师缘 ") + NPC_BY_ID[curIdentity.bound.npc].name + "(" + NPC_BY_ID[curIdentity.bound.npc].title + ")"}
+            </div>
+            <div className="mt-4 flex items-center gap-2 flex-wrap">
+              <span>道号:</span>
+              <input value={g.name} onChange={e => { const v = e.target.value.slice(0, 8); mutate(n => { n.name = v; }); }}
+                className="px-2 py-1 rounded" style={{ background: "#0b0d12", border: "1px solid #7a6420", color: "#f5d87a" }} />
+              <button className="btn-jade" onClick={rerollName}>🎲 随机</button>
+            </div>
+            <div className="mt-3">
+              {g.draw.picks.map(id => <span key={id} className={"tag " + (T_BY_ID[id].grade === "黑" ? "tag-red" : T_BY_ID[id].grade === "紫" ? "tag-purple" : "")}>{T_BY_ID[id].name}</span>)}
+            </div>
+            <div className="flex gap-3 justify-center mt-6 flex-wrap">
+              <button className="btn-jade" onClick={rerollIdentity}>🎭 换个身份</button>
+              <button className="btn-gold" onClick={() => mutate(n => { n.phase = "draw"; })}>↩ 返回选天赋</button>
+              <button className="btn-gold" onClick={startLife}>🌌 降临此世</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ 阶段三 / 四:主游戏 ============ */}
+      {(g.phase === "play" || g.phase === "end") && (
+        <div className="max-w-[1500px] mx-auto p-2 md:p-3">
+
+          {/* ---- 顶部导航 ---- */}
+          <div className="gold-card px-4 py-2 mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-4 flex-wrap">
+              <span className="text-xl font-bold gold-title">诸天轮回</span>
+              <span className="tag">修仙纪年:{Math.floor(g.age)} 岁</span>
+              <span className="tag tag-jade">第 {g.meta.rounds + (g.phase === "play" ? 1 : 0)} 世</span>
+              {g.buff && <span className="tag tag-purple">外挂:{MOON_BUFFS[g.buff].name}</span>}
+              {g.ntr > 0 && <span className="tag tag-red">绿帽神功 {g.ntr}年</span>}
+              {g.drunk > 0 && <span className="tag tag-purple">醉酒中</span>}
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <button className={g.auto ? "btn-blood" : "btn-jade"} onClick={toggleAuto}>{g.auto ? "⏸ 停止自动修仙" : "▶ 自动修仙"}</button>
+              <button className="btn-gold" onClick={() => setShopOpen(true)}>🏮 万宝坊市</button>
+              <button className="btn-gold" onClick={() => { saveNow(); }}>💾 保存</button>
+              <button className="btn-gold" onClick={() => flash(loadNow() ? "已读取手动存档" : "还没有手动存档,请先点保存")}>📜 读档</button>
+              <button className="btn-blood" onClick={() => { if (confirm("确定彻底重置存档?轮回记录也会清空!")) hardReset(); }}>🗑 重置</button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+
+            {/* ---- 左栏:人物 ---- */}
+            <div className="lg:col-span-3 space-y-3">
+              <div className="gold-card p-3">
+                <div className="flex items-center gap-3">
+                  <div className="text-5xl float-glow">{curIdentity ? curIdentity.icon : "🧘"}</div>
+                  <div>
+                    <div className="text-xl font-bold gold-title">{g.name}</div>
+                    <div className="text-xs" style={{ color: "#9fb7ac" }}>{curIdentity ? curIdentity.name : ""}</div>
+                    <div className="mt-1"><span className="tag">{REALMS[g.realm].name}</span></div>
+                  </div>
+                </div>
+                <hr className="divider-gold" />
+                <div className="text-xs flex justify-between"><span>骨龄 {Math.floor(g.age)}</span><span>寿元 {fmt(g.lifeMax)}</span></div>
+                <div className="bar-wrap"><div className="bar-life" style={{ width: clamp(g.age / g.lifeMax * 100, 0, 100) + "%" }} /></div>
+                <div className="text-xs flex justify-between mt-2"><span>修为 {fmt(g.exp)}</span><span>{g.realm >= 16 ? "飞升所需 " : "突破所需 "}{fmt(needExp)}</span></div>
+                <div className="bar-wrap"><div className="bar-exp" style={{ width: clamp(g.exp / needExp * 100, 0, 100) + "%" }} /></div>
+                <div className="text-xs flex justify-between mt-2"><span>气血 {fmt(g.hp)}</span><span>上限 {fmt(g.hpMax)}</span></div>
+                <div className="bar-wrap"><div className="bar-hp" style={{ width: clamp(g.hp / g.hpMax * 100, 0, 100) + "%" }} /></div>
+                <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                  <div className="jade-card p-2">⚔ 战力 <b className="text-gold-grade">{fmt(power)}</b></div>
+                  <div className="jade-card p-2">💎 灵石 <b className="text-gold-grade">{fmt(g.stone)}</b></div>
+                  <div className="jade-card p-2">💪 体魄 {g.stats.body}</div>
+                  <div className="jade-card p-2">🧠 悟性 {g.stats.wit}</div>
+                  <div className="jade-card p-2">🍀 气运 {g.stats.luck}</div>
+                  <div className="jade-card p-2">🌸 魅力 {g.stats.charm}</div>
+                </div>
+                <div className="text-xs mt-2" style={{ color: "#9fb7ac" }}>
+                  🛡 护身符 {g.shield} · 击杀 {g.kills} · 心魔 {g.demon}/10 {g.hunted ? "· 被通缉" : ""}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="gold-title text-lg">携带天赋</div>
+                {g.talents.map(id => {
+                  const t = T_BY_ID[id];
+                  const st = g.tstat[id] || 0;
+                  let more = null;
+                  if (id === "T_MULTICHILD") more = <div className="text-xs text-gold-grade">子嗣 {g.children.length} 人 · 年反哺约 {fmt(fedPerYear)} · 累计 {fmt(g.feedTotal)}</div>;
+                  if (id === "T_MOONGOD") more = <div className="text-xs text-gold-grade">当前外挂:{g.buff ? MOON_BUFFS[g.buff].name : "无"}</div>;
+                  if (id === "T_BLOODCOW") more = <div className="text-xs text-gold-grade">累计加成气血 {fmt(g.hpBonus)}</div>;
+                  if (id === "T_REJECT") more = <div className="text-xs text-gold-grade">被拒暴涨 {g.rejectCount}/10 次</div>;
+                  if (id === "T_FATHER") more = <div className="text-xs text-gold-grade">在世义父 {g.fathers.length} 位</div>;
+                  if (id === "T_HAREM") more = <div className="text-xs text-gold-grade">道侣 {g.wives.length} 人 · 战力+{g.wives.length * 8}%</div>;
+                  if (id === "T_FATESON") more = <div className="text-xs text-gold-grade">剩余复活 {g.reviveLeft.protag} 次</div>;
+                  if (id === "T_DEVOUR") more = <div className="text-xs text-gold-grade">心魔 {g.demon}/10</div>;
+                  return renderTalent(t, { full: false, extra: <div className="mt-2 text-xs" style={{ color: "#f5d87a" }}>累计触发:<b>{st}</b> 次{more}</div> });
+                })}
+              </div>
+            </div>
+
+            {/* ---- 中栏:日志 + 奇遇 + 控制台 ---- */}
+            <div className="lg:col-span-6 flex flex-col gap-3">
+              <div className="gold-card p-3" style={{ height: "46vh", minHeight: 260, overflowY: "auto" }}>
+                <div className="gold-title text-lg mb-1">修仙编年史</div>
+                {g.logs.map((l, i) => (
+                  <div key={i} className={logClass(l)} style={logStyle(l)}>
+                    <span className="text-xs mr-2" style={{ color: "#7d7660" }}>[{l.y}岁]</span>{l.t}
+                  </div>
+                ))}
+                <div ref={logEnd} />
+              </div>
+
+              {curEvent && g.phase === "play" && (
+                <div className="gold-card p-4 pop-in" style={{ borderColor: "#f5d87a", boxShadow: "0 0 30px rgba(245,216,122,0.35)" }}>
+                  <div className="text-xl font-bold gold-title">🎴 奇遇:{curEvent.title}</div>
+                  <p className="my-2 leading-relaxed" style={{ color: "#e8e2cf" }}>{curEvent.text}</p>
+                  <div className="space-y-2">
+                    {visibleChoices(curEvent, g).map(v => (
+                      <button key={v.i} onClick={() => handleEventChoice(v.i)}
+                        className={(v.c.need ? "btn-jade" : "btn-gold") + " w-full text-left"} style={v.c.need ? { borderColor: "#a855f7", color: "#e2c4ff" } : {}}>
+                        <span className={"tag " + (v.c.risk === "高" ? "tag-red" : v.c.risk === "天机" ? "tag-purple" : v.c.risk === "中" ? "" : "tag-jade")}>风险:{v.c.risk}</span>
+                        {v.c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="gold-card p-3">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  <button className="btn-gold" disabled={!!g.event || g.phase !== "play"} onClick={handleCultivate}>🧘 闭关苦修</button>
+                  <button className="btn-gold" disabled={!!g.event || g.phase !== "play"} onClick={handleExplore}>🗺️ 外出历练</button>
+                  <button className="btn-gold" disabled={!!g.event || g.phase !== "play"} onClick={() => act(n => {
+                    advance(n, 0.5);
+                    if (n.phase !== "play" || n.dying) return;
+                    const un = NPCS.filter(x => !metOf(x.id) && n.npc[x.id].alive && !n.npc[x.id].stolen);
+                    if (!un.length) { addLog(n, "天下仙子你已尽数结识,再逛就要被当成登徒子了。", "info"); return; }
+                    const x = pick(un);
+                    n.npc[x.id].met = true;
+                    const d = Math.round(x.beauty / 10 + n.stats.charm / 8);
+                    setFavor(n, x.id, d);
+                    addLog(n, "你在" + pick(["春风楼", "洛水河畔", "万宝楼", "雪峰脚下", "宗门后山"]) + "结识了「" + x.name + "」(" + x.title + "),好感+" + d + "。", "rare");
+                  })}>🌸 寻访仙子</button>
+                  <button className="btn-purple btn-gold" style={{ borderColor: "#a855f7", color: "#e2c4ff" }} disabled={!!g.event || g.phase !== "play"} onClick={() => {
+                    if (hasT(g, "T_ALCOHOL")) { handleDrink(); return; }
+                    act(n => {
+                      advance(n, 0.25);
+                      if (n.phase !== "play" || n.dying) return;
+                      const id = pick(n.talents);
+                      const t = T_BY_ID[id];
+                      trig(n, id);
+                      if (id === "T_MOONGOD") { rollMoon(n); return; }
+                      const v = gainExp(n, Math.max(50, REALMS[n.realm].need * 0.03));
+                      addLog(n, "你对着天空大喊:“" + t.name + "!”天道沉默了三秒,修为+" + fmt(v) + "。围观群众:“这人是不是有病?”", t.grade === "黑" ? "bad" : "epic");
+                    });
+                  }}>✨ 发动天赋整活</button>
+                  <button className={"btn-gold " + (g.exp >= needExp ? "grade-gold" : "")} disabled={!!g.event || g.phase !== "play"} onClick={handleBreakthrough}>
+                    ⚡ {g.realm >= 16 ? "渡劫飞升" : "冲击境界"}
+                  </button>
+                </div>
+                <div className="text-xs mt-2" style={{ color: "#7d7660" }}>
+                  {g.exp >= needExp ? "修为已满,可以冲关了!" : "闭关苦修一年,历练半年。奇遇出现时需先做出抉择。"}
+                  {hasT(g, "T_ALCOHOL") ? " 「发动天赋整活」会让酒剑仙开喝。" : ""}
+                </div>
+              </div>
+            </div>
+
+            {/* ---- 右栏:4 Tab ---- */}
+            <div className="lg:col-span-3">
+              <div className="gold-card p-2">
+                <div className="grid grid-cols-4 gap-1 mb-2">
+                  {["🌸后宫", "👶子嗣", "⚔️仇人", "🎒背包"].map((t, i) => (
+                    <button key={i} onClick={() => setTab(i)} className={tab === i ? "btn-gold" : "btn-jade"} style={{ padding: "6px 2px", fontSize: 13 }}>{t}</button>
+                  ))}
+                </div>
+                <div style={{ maxHeight: "78vh", overflowY: "auto" }} className="pr-1">
+
+                  {tab === 0 && (
+                    <div className="space-y-2">
+                      <div className="text-xs" style={{ color: "#9fb7ac" }}>道侣 {g.wives.length}{hasT(g, "T_HAREM") ? "" : "/" + WIFE_LIMIT}。赠礼花费约 {fmt(Math.max(100, Math.floor(REALMS[g.realm].need * 0.02)))} 灵石;双修需好感≥60,孕育需好感≥80(道侣免门槛)。</div>
+                      {NPCS.filter(n => metOf(n.id)).length === 0 && <div className="text-sm" style={{ color: "#7d7660" }}>尚未结识任何仙子,点「🌸寻访仙子」。</div>}
+                      {NPCS.filter(n => metOf(n.id)).map(n => {
+                        const s = g.npc[n.id];
+                        const isWife = g.wives.some(w => w.id === n.id);
+                        const dead = !s.alive, stolen = s.stolen;
+                        return (
+                          <div key={n.id} className="jade-card p-2" style={{ opacity: dead || stolen ? 0.5 : 1 }}>
+                            <div className="flex justify-between">
+                              <b className="text-gold-grade">{n.name}</b>
+                              <span className="text-xs">{isWife ? "💍道侣" : dead ? "已故" : stolen ? "被抢走" : n.kind}</span>
+                            </div>
+                            <div className="text-xs" style={{ color: "#9fb7ac" }}>{n.title} · {REALMS[n.realm].name} · 颜值 {n.beauty}</div>
+                            <div>{n.traits.map(t => <span key={t} className="tag tag-jade">{t}</span>)}</div>
+                            <div className="text-xs flex justify-between"><span>好感</span><span>{s.favor}</span></div>
+                            <div className="bar-wrap"><div style={{ height: "100%", width: clamp((s.favor + 100) / 2, 0, 100) + "%", background: s.favor < 0 ? "linear-gradient(90deg,#4a1a1a,#c33)" : "linear-gradient(90deg,#a03060,#ff8ec0)", transition: "width .4s" }} /></div>
+                            <div className="text-xs mt-1" style={{ color: "#b9b29a" }}>{n.desc.slice(0, 54)}…</div>
+                            {!dead && !stolen && (
+                              <div className="flex gap-1 mt-2 flex-wrap">
+                                <button className="btn-gold text-xs" style={{ padding: "4px 8px" }} disabled={!!g.event || g.phase !== "play"} onClick={() => handleGift(n.id)}>🎁赠礼</button>
+                                <button className="btn-jade text-xs" style={{ padding: "4px 8px" }} disabled={!!g.event || g.phase !== "play"} onClick={() => handleDualCultivate(n.id)}>💞双修</button>
+                                <button className="btn-gold text-xs" style={{ padding: "4px 8px", borderColor: "#ff6fa8", color: "#ffb3d1" }} disabled={!!g.event || g.phase !== "play"} onClick={() => handleHaveBaby(n.id)}>👶孕育</button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {tab === 1 && (
+                    <div className="space-y-2">
+                      <div className="jade-card p-2 text-sm">
+                        子嗣总数 <b className="text-gold-grade">{g.children.length}</b> · 成年 {g.children.filter(c => c.adult).length} ·
+                        年反哺约 <b className="text-gold-grade">{fmt(fedPerYear)}</b> · 累计反哺 {fmt(g.feedTotal)}
+                      </div>
+                      {g.children.length === 0 && <div className="text-sm" style={{ color: "#7d7660" }}>膝下无子。道侣足够好感后,可点「👶孕育」。</div>}
+                      {g.children.map(c => {
+                        const r = ROOT_BY_ID[c.root];
+                        const need = REALMS[Math.min(g.realm, 15)].need;
+                        const feed = c.adult ? Math.min(need * 2, need * 0.01 * r.feedMul) : 0;
+                        return (
+                          <div key={c.id} className="gold-card p-2">
+                            <div className="flex justify-between"><b>{c.name}({c.sex})</b><span className="text-xs">{c.age} 岁{c.adult ? " · 成年" : ""}</span></div>
+                            <div className="text-xs" style={{ color: "#9fb7ac" }}>母亲:{c.motherName}</div>
+                            <div><span className={"tag " + r.color}>{r.name}</span><span className="tag">反哺×{r.feedMul}</span></div>
+                            <div className="text-xs">{c.adult ? "每年反哺修为 " + fmt(feed) : "尚未成年(16岁起反哺)"}</div>
+                            <div className="text-xs" style={{ color: "#b9b29a" }}>{r.desc.slice(0, 40)}…</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {tab === 2 && (
+                    <div className="space-y-2">
+                      <div className="text-xs" style={{ color: "#9fb7ac" }}>义父暴毙、被抢、结怨都会进这里。女性仇敌战败可收入房中。</div>
+                      {g.enemies.length === 0 && <div className="text-sm" style={{ color: "#7d7660" }}>仇人录空空如也,善哉善哉。</div>}
+                      {g.enemies.map(e => {
+                        const wr = Math.round(winRate(g, e) * 100);
+                        return (
+                          <div key={e.id} className="gold-card p-2" style={{ borderColor: "#b33" }}>
+                            <div className="flex justify-between"><b style={{ color: "#ffb4b4" }}>{e.name}</b><span className="tag tag-red">{REALMS[e.power].name}</span></div>
+                            <div className="text-xs" style={{ color: "#9fb7ac" }}>{e.npcId ? NPC_BY_ID[e.npcId].title : "江湖人士"} · 结仇原因:{e.npcId ? "旧怨纠葛" : "因果缠身"}</div>
+                            <div className="text-xs">战力约 {fmt(enemyPower(e))} · 身家 {fmt(e.stone)} 灵石 · 预估胜率 {wr}%{e.female ? " · 可收入房中" : ""}</div>
+                            <button className="btn-blood mt-1 text-sm" style={{ padding: "4px 10px" }} disabled={!!g.event || g.phase !== "play"} onClick={() => handleRevenge(e.id)}>🗡️上门镇压</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {tab === 3 && (
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-1">
+                        <button className={!shopInRing ? "btn-gold" : "btn-jade"} onClick={() => setShopInRing(false)}>储物戒</button>
+                        <button className={shopInRing ? "btn-gold" : "btn-jade"} onClick={() => setShopInRing(true)}>万宝楼坊市</button>
+                      </div>
+                      {shopInRing ? renderShop() : (
+                        <div className="space-y-2">
+                          {bagIds.length === 0 && <div className="text-sm" style={{ color: "#7d7660" }}>储物戒里只有灰尘。</div>}
+                          {bagIds.map(id => {
+                            const it = ITEM_BY_ID[id];
+                            return (
+                              <div key={id} className="jade-card p-2">
+                                <div className="flex justify-between items-center">
+                                  <span><b className="tier-legend">{it.name}</b> ×{g.bag[id]} <span className="tag">{it.tier}</span></span>
+                                  <button className="btn-gold text-sm" style={{ padding: "3px 10px" }} disabled={!!g.event || g.phase !== "play"} onClick={() => handleUseItem(id)}>{it.type === "丹药" || it.type === "灵茶" ? "服用" : "使用"}</button>
+                                </div>
+                                <div className="text-xs mt-1" style={{ color: "#b9b29a" }}>{it.desc}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ 万宝坊市弹窗 ============ */}
+      {shopOpen && (g.phase === "play" || g.phase === "end") && (
+        <div className="modal-mask" onClick={() => setShopOpen(false)}>
+          <div className="gold-card p-4 pop-in" style={{ maxWidth: 640, width: "100%", maxHeight: "86vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-2xl gold-title font-bold">🏮 万宝楼</span>
+              <button className="btn-blood" onClick={() => setShopOpen(false)}>关闭</button>
+            </div>
+            {renderShop()}
+          </div>
+        </div>
+      )}
+
+      {/* ============ 轮回结算碑文 ============ */}
+      {g.phase === "end" && g.result && (
+        <div className="modal-mask" style={{ zIndex: 70 }}>
+          <div className="gold-card p-6 pop-in" style={{ maxWidth: 640, width: "100%", maxHeight: "92vh", overflowY: "auto" }}>
+            <div className="text-center">
+              <div className="text-4xl">{g.result.ascended ? "🌟" : "🪦"}</div>
+              <div className="text-2xl font-bold gold-title">本世轮回结算碑文</div>
+              <div className={"text-xl mt-1 " + (g.result.ascended ? "rainbow-text" : "text-gold-grade")}>谥号:{g.result.title}</div>
+            </div>
+            <hr className="divider-gold" />
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="jade-card p-2">存活年数:<b>{Math.floor(g.age)}</b> 岁</div>
+              <div className="jade-card p-2">巅峰境界:<b>{g.result.realmName}</b></div>
+              <div className="jade-card p-2">道侣:<b>{g.wives.length}</b> 人</div>
+              <div className="jade-card p-2">子嗣:<b>{g.children.length}</b> 人</div>
+              <div className="jade-card p-2">镇压仇家:<b>{g.kills}</b></div>
+              <div className="jade-card p-2">轮回评分:<b className="text-gold-grade">{g.result.score}</b></div>
+            </div>
+            <div className="mt-3 p-3 rounded" style={{ background: "#0b0d12", border: "1px solid #7a6420" }}>
+              {g.result.epitaph.map((l, i) => <div key={i} className="my-1 leading-relaxed" style={{ color: i === 0 ? "#f5d87a" : "#d8d1ba" }}>{l}</div>)}
+            </div>
+            <div className="mt-3 text-sm" style={{ color: "#9fb7ac" }}>
+              本世天赋:{g.talents.map(id => <span key={id} className="tag">{T_BY_ID[id].name}</span>)}
+            </div>
+            <div className="flex gap-3 justify-center mt-5 flex-wrap">
+              <button className="btn-gold" onClick={restart}>🌀 保留1个天赋开启下一世</button>
+              <button className="btn-jade" onClick={() => mutate(n => { n.phase = "end"; n.result = n.result; setShopOpen(false); })}>留在碑前</button>
+            </div>
+            <div className="text-xs text-center mt-2" style={{ color: "#7d7660" }}>下一世的轮回殿里,可在“继承上一世天赋”区挑 1 个带走。</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
